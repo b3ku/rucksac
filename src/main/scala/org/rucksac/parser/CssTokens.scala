@@ -35,10 +35,6 @@ trait CssTokens extends Tokens {
     def chars = s
   }
 
-  case class CssSpace(s: String) extends CssToken {
-    def chars = s
-  }
-
   case class CssPlus(s: String) extends CssToken {
     def chars = "+"
   }
@@ -53,6 +49,10 @@ trait CssTokens extends Tokens {
 
   case class CssComma(s: String) extends CssToken {
     def chars = ","
+  }
+
+  case class CssNot(s: String) extends CssToken {
+    def chars = "not"
   }
 
 }
