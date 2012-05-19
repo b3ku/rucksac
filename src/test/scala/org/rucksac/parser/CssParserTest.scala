@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.junit.{Ignore, Test}
+import org.junit.{After, Ignore, Test}
 
 
 /**
@@ -15,15 +15,22 @@ class CssParserTest {
   object TestCssParser extends CssParser {
 
     def testParse(input: String): Any = {
+      println("\n===================================================================")
+      println("parse: " + input)
       val res = parseAll(selectors_group, input) match {
       case Success(x, _) => x
       case NoSuccess(msg, _) => throw new ParseException(msg)
       }
-      println("parsed:" + res)
-      println("--------------------------------------------\n")
+      println("parsed: " + res)
+      println("===================================================================\n")
       res
     }
 
+  }
+
+  @After
+  def after() {
+    Console.flush();
   }
 
   @Test
@@ -36,6 +43,7 @@ class CssParserTest {
     TestCssParser.testParse("html|tr:nth-child(-n+6)");
     TestCssParser.testParse(":nth-child( +3n - 2 )");
     TestCssParser.testParse("html|*:not(:link):not(:visited)");
+    TestCssParser.testParse(":lang(fr-be) > q");
     TestCssParser.testParse("[foo|att=val]");
     TestCssParser.testParse("[*|att]");
     TestCssParser.testParse("[|att]");
@@ -50,17 +58,30 @@ class CssParserTest {
     TestCssParser.testParse("h1+h2, h1 + #foo");
     TestCssParser.testParse("h1~h2, h1 ~ :foo");
     TestCssParser.testParse("p::first-line span::first-letter");
+    TestCssParser.testParse("*.warning");
+    TestCssParser.testParse("*#id");
+    TestCssParser.testParse(":not(:notX(x))");
   }
 
   @Test(expected = classOf[ParseException])
-  def testInvalidSelector() {
-    TestCssParser.testParse("div +-/ p");
+  def testInvalidSyntaxSelector() {
+    TestCssParser.testParse("div +> p");
   }
 
   @Test(expected = classOf[ParseException])
   @Ignore("not illegal by the grammar, but should be according to http://www.w3.org/TR/selectors/#nth-child-pseudo")
   def testNthChildIllegalSpace() {
     TestCssParser.testParse(":nth-child(+ 2n)");
+  }
+
+  @Test(expected = classOf[ParseException])
+  def testInvalidNotSelector() {
+    TestCssParser.testParse(":not(:not(dummy))");
+  }
+
+  @Test(expected = classOf[ParseException])
+  def testInvalidPseudoFunctionWithoutArgument() {
+    TestCssParser.testParse(":func()");
   }
 
 }

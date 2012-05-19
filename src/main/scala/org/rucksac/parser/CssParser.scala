@@ -13,7 +13,8 @@ import util.parsing.combinator.RegexParsers
 class CssParser extends RegexParsers with CssTokens {
 
   implicit def toLogged(name:String) = new {
-    def !!![T](p:Parser[T]) = log(p)(name)
+//    def !!![T](p:Parser[T]) = log(p)(name)
+    def !!![T](p:Parser[T]) = p
   }
 
 
@@ -52,6 +53,8 @@ class CssParser extends RegexParsers with CssTokens {
 
   lazy val d_w = """([ \t\r\n\f]*)"""
 
+  lazy val d_not = """(?i)not\("""
+
 
   // ---- lexical rules ----
 
@@ -59,13 +62,13 @@ class CssParser extends RegexParsers with CssTokens {
 
   lazy val optS = """[ \t\r\n\f]*""".r
 
-  final def not: Parser[CssToken] = ":not(" ^^ { CssNot }
+  final def not: Parser[CssToken] = (":" + d_not).r ^^ { CssNot }
 
   final def ident: Parser[CssToken] = d_ident.r ^^ { CssIdent }
 
   final def string: Parser[CssToken] = d_string.r ^^ { CssString }
 
-  final def function: Parser[CssToken] = (d_ident + """\(""").r ^^ { CssFunction }
+  final def function: Parser[CssToken] = ("""(?!"""+ d_not + """)""" + d_ident + """\(""").r ^^ { CssFunction }
 
   final def number: Parser[CssToken] = d_num.r ^^ { CssNumber }
 
@@ -85,7 +88,7 @@ class CssParser extends RegexParsers with CssTokens {
   // -- grammar part ----------------------------------------------------------------------------------------------
 
 
-  def selectors_group = "sel_group" !!! (selector  ~ rep(comma <~ optS ~ selector))
+  def selectors_group = "sel_group" !!! (selector  ~ rep((comma <~ optS) ~ selector))
 
   def selector = "selector" !!! simple_selector_sequence ~ rep(combinator ~ simple_selector_sequence)
 
@@ -107,25 +110,25 @@ class CssParser extends RegexParsers with CssTokens {
 
   def type_selector = "type_sel" !!! opt(namespace_prefix) ~ ident
 
-  def namespace_prefix = "ns_prefix" !!! opt("ns_ident" !!! ident | "ns_*" !!!  "*") ~ "|" ~ not("=")
+  def namespace_prefix = "ns_prefix" !!! opt("ns_ident" !!! ident | "ns_*" !!!  "*") ~ """\|(?!\=)""".r
 
   def universal = "universal" !!! opt(namespace_prefix) ~ "*"
 
   def styleClass = "." ~ ident
 
-  def attrib = "attrib" !!! "[" <~ optS ~ type_selector <~ optS ~ opt(
-    ("=" | "^=" | "$=" | "*=" | "~=" | "|=") <~ optS ~ (ident | string) <~ optS
+  def attrib = "attrib" !!! "[" ~ ((optS ~> type_selector) <~ optS) ~ opt(
+    ((("=" | "~=" | "|=" | "^=" | "$=" | "*=") <~ optS) ~ (ident | string)) <~ optS
   ) ~ "]"
 
   def pseudo = ":" ~ opt(":") ~ (functional_pseudo | ident)
 
-  def functional_pseudo = function <~ optS ~ expression ~ ")"
+  def functional_pseudo = "func_pseudo" !!! function ~ optS ~ expression ~ ")"
 
   def expression = simple_expression ~ rep(simple_expression)
 
   def simple_expression = (plus | "-" | dimension | number | string | ident) <~ optS
 
-  def negation = "not" !!! not <~ optS ~ negation_arg ~ ")"
+  def negation = "not" !!! not ~ optS ~ negation_arg ~ ")"
 
   def negation_arg = (
     "neg_type" !!! type_selector
