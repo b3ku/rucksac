@@ -1,6 +1,8 @@
 package org.rucksac.parser
 
 import util.parsing.combinator.RegexParsers
+import org.w3c.css.sac.{CombinatorCondition, Condition, SimpleSelector, ElementSelector}
+import org.sucksac.sac.{AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -62,27 +64,27 @@ class CssParser extends RegexParsers with CssTokens {
 
   lazy val optS = """[ \t\r\n\f]*""".r
 
-  final def not: Parser[CssToken] = (":" + d_not).r ^^ { CssNot }
+  final def not: Parser[CssNot] = (":" + d_not).r ^^ { CssNot }
 
-  final def ident: Parser[CssToken] = d_ident.r ^^ { CssIdent }
+  final def ident: Parser[CssIdent] = d_ident.r ^^ { CssIdent }
 
-  final def string: Parser[CssToken] = d_string.r ^^ { CssString }
+  final def string: Parser[CssString] = d_string.r ^^ { CssString }
 
-  final def function: Parser[CssToken] = ("""(?!"""+ d_not + """)""" + d_ident + """\(""").r ^^ { CssFunction }
+  final def function: Parser[CssFunction] = ("""(?!"""+ d_not + """)""" + d_ident + """\(""").r ^^ { CssFunction }
 
-  final def number: Parser[CssToken] = d_num.r ^^ { CssNumber }
+  final def number: Parser[CssNumber] = d_num.r ^^ { CssNumber }
 
-  final def hash = ("#" + d_name).r ^^ { CssHash }
+  final def hash: Parser[CssHash] = ("#" + d_name).r ^^ { CssHash }
 
-  final def plus: Parser[CssToken] = (d_w + "\\+").r ^^ { CssPlus }
+  final def plus: Parser[CssPlus] = (d_w + "\\+").r ^^ { CssPlus }
 
-  final def greater: Parser[CssToken] = (d_w + ">").r ^^ { CssGreater }
+  final def greater: Parser[CssGreater] = (d_w + ">").r ^^ { CssGreater }
 
-  final def comma: Parser[CssToken] = (d_w + ",").r ^^ { CssComma }
+  final def comma: Parser[CssComma] = (d_w + ",").r ^^ { CssComma }
 
-  final def tilde: Parser[CssToken] = (d_w + "~").r ^^ { CssTilde }
+  final def tilde: Parser[CssTilde] = (d_w + "~").r ^^ { CssTilde }
 
-  final def dimension: Parser[CssToken] = (d_num + d_ident).r ^^ { CssDimension }
+  final def dimension: Parser[CssDimension] = (d_num + d_ident).r ^^ { CssDimension }
 
 
   // -- grammar part ----------------------------------------------------------------------------------------------
@@ -99,22 +101,61 @@ class CssParser extends RegexParsers with CssTokens {
       | s
     )
 
-  def simple_selector_sequence = (
-    base_selector ~ rep(post_selector)
-      | post_selector ~ rep(post_selector)
+  def simple_selector_sequence: Parser[SimpleSelector] = (
+    base_selector ~ rep(post_selector) ^^ {
+      case base ~ conditions =>
+      conditions.size match {
+      case 0 => base
+      case 1 => new ConditionalSelectorImpl(base, conditions.head)
+      case _ => new ConditionalSelectorImpl(base, createCombinatorCondition(conditions))
+      }
+    }
+      | post_selector ~ rep(post_selector) ^^ {
+      case condition ~ conditions => {
+        val base = new ElementSelectorImpl(null, null)
+        conditions.size match {
+        case 0 => new ConditionalSelectorImpl(base, condition)
+        case _ => new ConditionalSelectorImpl(base, createCombinatorCondition(condition :: conditions))
+        }
+      }
+    }
     )
 
-  def base_selector = type_selector | universal
+  private def createCombinatorCondition(list : List[Condition]): CombinatorCondition = {
+    assert(list.size > 1)
+    new CombinatorConditionImpl(list.head, if (list.size == 2) list.tail.head else createCombinatorCondition(list.tail))
+  }
 
-  def post_selector = hash | styleClass | attrib | negation | pseudo
+  def base_selector: Parser[ElementSelector] = type_selector | universal
 
-  def type_selector = "type_sel" !!! opt(namespace_prefix) ~ ident
+  def post_selector: Parser[Condition] = (
+    hash ^^ { id => AttributeConditionImpl.createIdCondition(id.chars) }
+      | styleClass ^^ { className => AttributeConditionImpl.createClassCondition(className.chars) }
+      | attrib ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
+      | negation ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
+      | pseudo ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
+    )
 
-  def namespace_prefix = "ns_prefix" !!! opt("ns_ident" !!! ident | "ns_*" !!!  "*") ~ """\|(?!\=)""".r
+  def type_selector: Parser[ElementSelector] = opt(namespace_prefix) ~ ident ^^ {
+    case Some(prefix) ~ name => new ElementSelectorImpl(prefix, name.chars)
+    case None ~ name => new ElementSelectorImpl(null, name.chars)
+  }
 
-  def universal = "universal" !!! opt(namespace_prefix) ~ "*"
+  def namespace_prefix: Parser[String] =
+    opt(
+      ident ^^ { x => x.chars}
+        | "*" ^^ { _ => null }
+    ) <~ """\|(?!\=)""".r ^^ {
+      case Some(x) => x
+      case None => ""
+    }
 
-  def styleClass = "." ~ ident
+  def universal: Parser[ElementSelector] = opt(namespace_prefix) <~ "*" ^^ {
+    case Some(prefix) => new ElementSelectorImpl(prefix, null)
+    case None => new ElementSelectorImpl(null, null)
+  }
+
+  def styleClass: Parser[CssIdent] = "." ~> ident
 
   def attrib = "attrib" !!! "[" ~ ((optS ~> type_selector) <~ optS) ~ opt(
     ((("=" | "~=" | "|=" | "^=" | "$=" | "*=") <~ optS) ~ (ident | string)) <~ optS
