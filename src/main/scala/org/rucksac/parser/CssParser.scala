@@ -2,7 +2,7 @@ package org.rucksac.parser
 
 import util.parsing.combinator.RegexParsers
 import org.w3c.css.sac.{CombinatorCondition, Condition, SimpleSelector, ElementSelector}
-import org.sucksac.sac.{AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
+import org.rucksac.sac.{AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
 
 /**
  * A parser for the CSS selectors level 3 grammar
