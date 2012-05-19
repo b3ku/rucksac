@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.{Condition, SimpleSelector, Selector, ConditionalSelector}
 
@@ -8,7 +8,8 @@ import org.w3c.css.sac.{Condition, SimpleSelector, Selector, ConditionalSelector
  * @since 19.05.12
  */
 
-case class ConditionalSelectorImpl(selector: SimpleSelector, condition: Condition) extends SelectorImpl with ConditionalSelector {
+case class ConditionalSelectorImpl(selector: SimpleSelector, condition: Condition)
+  extends SelectorImpl with ConditionalSelector {
 
   def getSelectorType = Selector.SAC_CONDITIONAL_SELECTOR
 

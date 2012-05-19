@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.Selector
 
@@ -9,6 +9,6 @@ import org.w3c.css.sac.Selector
 
 abstract class SelectorImpl extends Selector {
 
-//  def getSelectorType
+  //  def getSelectorType
 
 }

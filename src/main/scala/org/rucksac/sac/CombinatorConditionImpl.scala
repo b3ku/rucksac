@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.{Condition, CombinatorCondition}
 
@@ -8,7 +8,8 @@ import org.w3c.css.sac.{Condition, CombinatorCondition}
  * @since 19.05.12
  */
 
-case class CombinatorConditionImpl(cType: Short, first: Condition, second: Condition) extends ConditionImpl with CombinatorCondition {
+case class CombinatorConditionImpl(cType: Short, first: Condition, second: Condition)
+  extends ConditionImpl with CombinatorCondition {
 
   def this(first: Condition, second: Condition) = this(Condition.SAC_AND_CONDITION, first, second)
 

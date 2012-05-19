@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.Condition
 
@@ -9,6 +9,6 @@ import org.w3c.css.sac.Condition
 
 abstract class ConditionImpl extends Condition {
 
-//  def getConditionType = cType
+  //  def getConditionType = cType
 
 }

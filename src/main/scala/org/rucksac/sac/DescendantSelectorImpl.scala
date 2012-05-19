@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.{SimpleSelector, Selector, DescendantSelector}
 
@@ -8,7 +8,8 @@ import org.w3c.css.sac.{SimpleSelector, Selector, DescendantSelector}
  * @since 19.05.12
  */
 
-case class DescendantSelectorImpl(ancestor: Selector, descendant: SimpleSelector) extends SelectorImpl with DescendantSelector {
+case class DescendantSelectorImpl(ancestor: Selector, descendant: SimpleSelector)
+  extends SelectorImpl with DescendantSelector {
 
   def getSelectorType = Selector.SAC_DESCENDANT_SELECTOR
 

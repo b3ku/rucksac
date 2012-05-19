@@ -1,4 +1,4 @@
-package org.sucksac.sac
+package org.rucksac.sac
 
 import org.w3c.css.sac.{SimpleSelector, Selector, SiblingSelector}
 
