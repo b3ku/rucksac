@@ -1,8 +1,8 @@
 package org.rucksac.parser
 
+import org.rucksac.sac.{SiblingSelectorImpl, DescendantSelectorImpl, AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
+import org.w3c.css.sac.{ElementSelector, CombinatorCondition, Condition, SimpleSelector, Selector}
 import util.parsing.combinator.RegexParsers
-import org.w3c.css.sac.{CombinatorCondition, Condition, SimpleSelector, ElementSelector}
-import org.rucksac.sac.{AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -92,13 +92,28 @@ class CssParser extends RegexParsers with CssTokens {
 
   def selectors_group = "sel_group" !!! (selector  ~ rep((comma <~ optS) ~ selector))
 
-  def selector = "selector" !!! simple_selector_sequence ~ rep(combinator ~ simple_selector_sequence)
+  def selector: Parser[Selector] = simple_selector_sequence ~
+    rep(combinator ~ simple_selector_sequence ^^ { case comb ~ sel => NextSelector(comb, sel) }) ^^ {
+    case seq ~ list => createSelectorSequence(seq, list)
+  }
 
-  def combinator = (
-    plus <~ optS
-      | greater <~ optS
-      | tilde <~ optS
-      | s
+  private def createSelectorSequence(sel: Selector, list: List[NextSelector]): Selector = {
+    list.size match {
+    case 0 => sel
+    case _ => createSelectorSequence(list.head.op match {
+    case ' ' => DescendantSelectorImpl.createDescendantSelector(sel, list.head.selector)
+    case '>' => DescendantSelectorImpl.createChildSelector(sel, list.head.selector)
+    case '+' => SiblingSelectorImpl.createDirectAdjacentSibling(sel, list.head.selector)
+    case '~' => SiblingSelectorImpl.createGeneralSibling(sel, list.head.selector)
+    }, list.tail)
+    }
+  }
+
+  def combinator: Parser[Char] = (
+    plus <~ optS ^^ { _ => '+' }
+      | greater <~ optS ^^ { _ => '>' }
+      | tilde <~ optS ^^ { _ => '~' }
+      | s ^^ { _ => ' '}
     )
 
   def simple_selector_sequence: Parser[SimpleSelector] = (
@@ -181,3 +196,6 @@ class CssParser extends RegexParsers with CssTokens {
     )
 
 }
+
+
+private case class NextSelector(op: Char, selector: SimpleSelector)

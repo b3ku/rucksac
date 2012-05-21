@@ -8,13 +8,23 @@ import org.w3c.css.sac.{SimpleSelector, Selector, DescendantSelector}
  * @since 19.05.12
  */
 
-case class DescendantSelectorImpl(ancestor: Selector, descendant: SimpleSelector)
+case class DescendantSelectorImpl(selectorType: Short, ancestor: Selector, descendant: SimpleSelector)
   extends SelectorImpl with DescendantSelector {
 
-  def getSelectorType = Selector.SAC_DESCENDANT_SELECTOR
+  def getSelectorType = selectorType
 
   def getAncestorSelector = ancestor
 
   def getSimpleSelector = descendant
+
+}
+
+object DescendantSelectorImpl {
+
+  def createDescendantSelector(ancestor: Selector, descendant: SimpleSelector) =
+    new DescendantSelectorImpl(Selector.SAC_DESCENDANT_SELECTOR, ancestor, descendant)
+
+  def createChildSelector(ancestor: Selector, descendant: SimpleSelector) =
+    new DescendantSelectorImpl(Selector.SAC_CHILD_SELECTOR, ancestor, descendant)
 
 }
