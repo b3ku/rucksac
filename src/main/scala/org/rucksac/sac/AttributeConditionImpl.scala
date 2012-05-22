@@ -8,7 +8,7 @@ import org.w3c.css.sac.{Condition, AttributeCondition}
  * @since 19.05.12
  */
 
-class AttributeConditionImpl(cType: Short, nsUri: String, name: String, specified: Boolean, value: String)
+case class AttributeConditionImpl(cType: Short, nsUri: String, name: String, specified: Boolean, value: String)
   extends ConditionImpl with AttributeCondition {
 
   def getConditionType = cType
