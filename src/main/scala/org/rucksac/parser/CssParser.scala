@@ -1,8 +1,8 @@
 package org.rucksac.parser
 
-import org.rucksac.sac.{SiblingSelectorImpl, DescendantSelectorImpl, AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
-import org.w3c.css.sac.{ElementSelector, CombinatorCondition, Condition, SimpleSelector, Selector}
 import util.parsing.combinator.RegexParsers
+import org.rucksac.sac.{SelectorListImpl, SiblingSelectorImpl, DescendantSelectorImpl, AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
+import org.w3c.css.sac.{SelectorList, ElementSelector, CombinatorCondition, Condition, SimpleSelector, Selector}
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -90,7 +90,9 @@ class CssParser extends RegexParsers with CssTokens {
   // -- grammar part ----------------------------------------------------------------------------------------------
 
 
-  def selectors_group = "sel_group" !!! (selector  ~ rep((comma <~ optS) ~ selector))
+  def selectors_group: Parser[SelectorList] = selector ~ rep((comma <~ optS) ~> selector) ^^ {
+    case sel ~ list => new SelectorListImpl(sel :: list)
+  }
 
   def selector: Parser[Selector] = simple_selector_sequence ~
     rep(combinator ~ simple_selector_sequence ^^ { case comb ~ sel => NextSelector(comb, sel) }) ^^ {
