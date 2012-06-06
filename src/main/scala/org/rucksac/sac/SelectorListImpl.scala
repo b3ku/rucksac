@@ -8,7 +8,7 @@ import org.w3c.css.sac.{Selector, SelectorList}
  * @since 22.05.12
  */
 
-case class SelectorListImpl(selectorList: List[Selector]) extends SelectorList {
+class SelectorListImpl(selectorList: List[Selector]) extends SelectorList {
 
   private val selectorArray = selectorList.toArray
 
@@ -16,4 +16,5 @@ case class SelectorListImpl(selectorList: List[Selector]) extends SelectorList {
 
   def item(index: Int) = selectorArray(index)
 
+  override def toString = selectorList mkString ", "
 }

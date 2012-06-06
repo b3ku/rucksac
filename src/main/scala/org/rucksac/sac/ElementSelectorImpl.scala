@@ -8,7 +8,7 @@ import org.w3c.css.sac.{Selector, ElementSelector}
  * @since 19.05.12
  */
 
-case class ElementSelectorImpl(nsUri: String, name: String) extends SelectorImpl with ElementSelector {
+class ElementSelectorImpl(nsUri: String, name: String) extends SelectorImpl with ElementSelector {
 
   def getSelectorType = Selector.SAC_ELEMENT_NODE_SELECTOR
 
@@ -16,4 +16,5 @@ case class ElementSelectorImpl(nsUri: String, name: String) extends SelectorImpl
 
   def getLocalName = name
 
+  override def toString = (if (nsUri != null) "{" + nsUri + "}|" else "") + (if (name != null) name else "*")
 }

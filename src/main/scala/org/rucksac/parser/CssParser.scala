@@ -1,8 +1,8 @@
 package org.rucksac.parser
 
 import util.parsing.combinator.RegexParsers
-import org.rucksac.sac.{SelectorListImpl, SiblingSelectorImpl, DescendantSelectorImpl, AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
-import org.w3c.css.sac.{SelectorList, ElementSelector, CombinatorCondition, Condition, SimpleSelector, Selector}
+import org.w3c.css.sac.{NegativeCondition, AttributeCondition, SelectorList, ElementSelector, CombinatorCondition, Condition, SimpleSelector, Selector}
+import org.rucksac.sac.{SelectorConditionImpl, NegativeConditionImpl, AttributeComparator, AttrHatComparator, AttrStarComparator, AttrDollarComparator, AttrTildeComparator, AttrBarComparator, AttrEqualsComparator, GeneralSiblingCombinator, AdjacentSiblingCombinator, ChildCombinator, DescendantCombinator, SelectorCombinator, SelectorListImpl, SiblingSelectorImpl, DescendantSelectorImpl, AttributeConditionImpl, CombinatorConditionImpl, ConditionalSelectorImpl, ElementSelectorImpl}
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -103,19 +103,19 @@ class CssParser extends RegexParsers with CssTokens {
     list.size match {
     case 0 => sel
     case _ => createSelectorSequence(list.head.op match {
-    case ' ' => DescendantSelectorImpl.createDescendantSelector(sel, list.head.selector)
-    case '>' => DescendantSelectorImpl.createChildSelector(sel, list.head.selector)
-    case '+' => SiblingSelectorImpl.createDirectAdjacentSibling(sel, list.head.selector)
-    case '~' => SiblingSelectorImpl.createGeneralSibling(sel, list.head.selector)
+    case DescendantCombinator => DescendantSelectorImpl.createDescendantSelector(sel, list.head.selector)
+    case ChildCombinator => DescendantSelectorImpl.createChildSelector(sel, list.head.selector)
+    case AdjacentSiblingCombinator => SiblingSelectorImpl.createDirectAdjacentSibling(sel, list.head.selector)
+    case GeneralSiblingCombinator => SiblingSelectorImpl.createGeneralSibling(sel, list.head.selector)
     }, list.tail)
     }
   }
 
-  def combinator: Parser[Char] = (
-    plus <~ optS ^^ { _ => '+' }
-      | greater <~ optS ^^ { _ => '>' }
-      | tilde <~ optS ^^ { _ => '~' }
-      | s ^^ { _ => ' '}
+  def combinator: Parser[SelectorCombinator] = (
+    plus <~ optS ^^ { _ => AdjacentSiblingCombinator }
+      | greater <~ optS ^^ { _ => ChildCombinator }
+      | tilde <~ optS ^^ { _ => GeneralSiblingCombinator }
+      | s ^^ { _ => DescendantCombinator }
     )
 
   def simple_selector_sequence: Parser[SimpleSelector] = (
@@ -146,11 +146,11 @@ class CssParser extends RegexParsers with CssTokens {
   def base_selector: Parser[ElementSelector] = type_selector | universal
 
   def post_selector: Parser[Condition] = (
-    hash ^^ { id => AttributeConditionImpl.createIdCondition(id.chars) }
-      | styleClass ^^ { className => AttributeConditionImpl.createClassCondition(className.chars) }
-      | attrib ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
-      | negation ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
-      | pseudo ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
+    hashCondition
+      | styleClass
+      | attrib
+      | negation
+      | pseudo
     )
 
   def type_selector: Parser[ElementSelector] = opt(namespace_prefix) ~ ident ^^ {
@@ -172,13 +172,28 @@ class CssParser extends RegexParsers with CssTokens {
     case None => new ElementSelectorImpl(null, null)
   }
 
-  def styleClass: Parser[CssIdent] = "." ~> ident
+  def styleClass: Parser[AttributeCondition] = "." ~> ident ^^ {
+    className => AttributeConditionImpl.createClassCondition(className.chars)
+  }
 
-  def attrib = "attrib" !!! "[" ~ ((optS ~> type_selector) <~ optS) ~ opt(
-    ((("=" | "~=" | "|=" | "^=" | "$=" | "*=") <~ optS) ~ (ident | string)) <~ optS
-  ) ~ "]"
+  def hashCondition: Parser[AttributeCondition] = hash ^^ {
+    id => AttributeConditionImpl.createIdCondition(id.chars)
+  }
 
-  def pseudo = ":" ~ opt(":") ~ (functional_pseudo | ident)
+  def attrib: Parser[AttributeCondition] = ("[" ~> ((optS ~> type_selector) <~ optS)) ~ opt(
+    ((( "=" ^^ { _ => AttrEqualsComparator }
+      | "~=" ^^ { _ => AttrTildeComparator }
+      | "|=" ^^ { _ => AttrBarComparator }
+      | "^=" ^^ { _ => AttrHatComparator }
+      | "$=" ^^ { _ => AttrDollarComparator }
+      | "*=" ^^ { _ => AttrStarComparator }
+      ) <~ optS) ~ (ident | string) ^^ { case op ~ value => AttrOperator(op, value.chars)} ) <~ optS
+  ) <~ "]" ^^ {
+    case typeSel ~ Some(attrOp) => AttributeConditionImpl.createAttributeCondition(typeSel, attrOp.op, attrOp.value)
+    case typeSel ~ None => AttributeConditionImpl.createAttributeCondition(typeSel)
+  }
+
+  def pseudo = ":" ~ opt(":") ~ (functional_pseudo | ident) ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
 
   def functional_pseudo = "func_pseudo" !!! function ~ optS ~ expression ~ ")"
 
@@ -186,18 +201,22 @@ class CssParser extends RegexParsers with CssTokens {
 
   def simple_expression = (plus | "-" | dimension | number | string | ident) <~ optS
 
-  def negation = "not" !!! not ~ optS ~ negation_arg ~ ")"
+  def negation: Parser[NegativeCondition] = not ~> optS ~> negation_arg <~ ")" ^^ {
+    arg => new NegativeConditionImpl(arg)
+  }
 
-  def negation_arg = (
-    "neg_type" !!! type_selector
-      | "neg_uni" !!! universal
-      | "neg_hash" !!! hash
-      | "neg_class" !!! styleClass
-      | "neg_att" !!! attrib
-      | "neg_pseudo" !!! pseudo
+  def negation_arg: Parser[Condition] = (
+    type_selector ^^ { sel => new SelectorConditionImpl(sel) }
+      | universal ^^ { sel => new SelectorConditionImpl(sel) }
+      | hashCondition
+      | styleClass
+      | attrib
+      | pseudo
     )
 
 }
 
 
-private case class NextSelector(op: Char, selector: SimpleSelector)
+private case class NextSelector(op: SelectorCombinator, selector: SimpleSelector)
+
+private case class AttrOperator(op: AttributeComparator, value: String)

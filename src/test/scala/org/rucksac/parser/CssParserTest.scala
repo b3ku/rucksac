@@ -36,7 +36,6 @@ class CssParserTest {
 
   @Test
   def testValidSelectors() {
-    TestCssParser.testParse("div.main.user > .dummy[name='foo']")
     TestCssParser.testParse("input:checked:first-child")
     TestCssParser.testParse(":checkbox")
     TestCssParser.testParse("#bar:not(div)")
@@ -110,6 +109,14 @@ class CssParserTest {
 
     selector = descendantSelector.getAncestorSelector
     assertElementSelector(selector, "div", null)
+
+    Assert.assertEquals("div * p", selectorList.toString)
+  }
+
+  @Test
+  def testParseCss2() {
+    val result = TestCssParser.testParse("div.main.user > .dummy[name='foo']")
+    Assert.assertEquals("div.main.user > *.dummy[name='foo']", result.toString)
   }
 
 }

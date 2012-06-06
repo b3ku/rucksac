@@ -8,7 +8,7 @@ import org.w3c.css.sac.{SimpleSelector, Selector, SiblingSelector}
  * @since 19.05.12
  */
 
-case class SiblingSelectorImpl(selectorType: Short, selector: Selector, sibling: SimpleSelector) extends SelectorImpl with SiblingSelector {
+class SiblingSelectorImpl(selectorType: Short, selector: Selector, sibling: SimpleSelector) extends SelectorImpl with SiblingSelector {
 
   def getNodeType = SiblingSelector.ANY_NODE
 
@@ -18,6 +18,10 @@ case class SiblingSelectorImpl(selectorType: Short, selector: Selector, sibling:
 
   def getSiblingSelector = sibling
 
+  override def toString = selector + (selectorType match {
+  case Selector.SAC_DIRECT_ADJACENT_SELECTOR => "+"
+  case SacExtensions.SAC_GENERAL_SIBLING_SELECTOR => "~"
+  }) + sibling
 }
 
 object SiblingSelectorImpl {

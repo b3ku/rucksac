@@ -19,4 +19,8 @@ case class CombinatorConditionImpl(cType: Short, first: Condition, second: Condi
 
   def getSecondCondition = second
 
+  override def toString = cType match {
+  case Condition.SAC_AND_CONDITION => first.toString + second.toString
+  case _ => throw new IllegalArgumentException
+  }
 }

@@ -17,4 +17,5 @@ case class ConditionalSelectorImpl(selector: SimpleSelector, condition: Conditio
 
   def getCondition = condition
 
+  override def toString = selector.toString + condition.toString
 }

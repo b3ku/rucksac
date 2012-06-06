@@ -8,7 +8,7 @@ import org.w3c.css.sac.{SimpleSelector, Selector, DescendantSelector}
  * @since 19.05.12
  */
 
-case class DescendantSelectorImpl(selectorType: Short, ancestor: Selector, descendant: SimpleSelector)
+class DescendantSelectorImpl(selectorType: Short, ancestor: Selector, descendant: SimpleSelector)
   extends SelectorImpl with DescendantSelector {
 
   def getSelectorType = selectorType
@@ -17,7 +17,13 @@ case class DescendantSelectorImpl(selectorType: Short, ancestor: Selector, desce
 
   def getSimpleSelector = descendant
 
+  override def toString = ancestor + (selectorType match {
+  case Selector.SAC_CHILD_SELECTOR => " > "
+  case Selector.SAC_DESCENDANT_SELECTOR => " "
+  case _ => throw new IllegalArgumentException
+  }) + descendant
 }
+
 
 object DescendantSelectorImpl {
 
