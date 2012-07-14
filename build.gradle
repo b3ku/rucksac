@@ -2,6 +2,8 @@ apply plugin: 'scala'
 
 defaultTasks 'clean', 'build'
 
+version = '1.0'
+
 repositories {
     mavenCentral()
 }
