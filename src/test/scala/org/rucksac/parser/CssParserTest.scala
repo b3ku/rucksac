@@ -43,22 +43,7 @@ class CssParserTest {
     TestCssParser.testParse(":nth-child( +3n - 2 )")
     TestCssParser.testParse("html|*:not(:link):not(:visited)")
     TestCssParser.testParse(":lang(fr-be) > q")
-    TestCssParser.testParse("[foo|att=val]")
-    TestCssParser.testParse("[*|att]")
-    TestCssParser.testParse("[|att]")
-    TestCssParser.testParse("[att]")
-    TestCssParser.testParse("object[type^=\"image/\"]")
-    TestCssParser.testParse("a[href$=\".html\"]")
-    TestCssParser.testParse("p[title*=\"hello\"]")
-    TestCssParser.testParse("a[hreflang|=\"en\"]")
-    TestCssParser.testParse("a[hreflang=en]")
-    TestCssParser.testParse("a[rel~=\"copyright\"]")
-    TestCssParser.testParse("h1, h2.foo, h3")
-    TestCssParser.testParse("h1+h2, h1 + #foo")
-    TestCssParser.testParse("h1~h2, h1 ~ :foo")
     TestCssParser.testParse("p::first-line span::first-letter")
-    TestCssParser.testParse("*.warning")
-    TestCssParser.testParse("*#id")
     TestCssParser.testParse(":not(:notX(x))")
   }
 
@@ -116,7 +101,97 @@ class CssParserTest {
   @Test
   def testParseCss2() {
     val result = TestCssParser.testParse("div.main.user > .dummy[name='foo']")
-    Assert.assertEquals("div.main.user > *.dummy[name='foo']", result.toString)
+    Assert.assertEquals("div.main.user > *.dummy[*|name='foo']", result.toString)
+  }
+
+  @Test
+  def testParseCss3() {
+    val result = TestCssParser.testParse("h1, h2.foo, h3")
+    Assert.assertEquals("h1, h2.foo, h3", result.toString)
+  }
+
+  @Test
+  def testParseCss4() {
+    val result = TestCssParser.testParse("h1+h2, h1 + #foo")
+    Assert.assertEquals("h1+h2, h1+*#foo", result.toString)
+  }
+
+  @Test
+  def testParseCss5() {
+    val result = TestCssParser.testParse("h1~h2, h1 ~ :foo")
+    Assert.assertEquals("h1~h2, h1~*:foo", result.toString)
+  }
+
+  @Test
+  def testParseCss6() {
+    val result = TestCssParser.testParse("*.warning")
+    Assert.assertEquals("*.warning", result.toString)
+  }
+
+  @Test
+  def testParseCss7() {
+    val result = TestCssParser.testParse("*#id")
+    Assert.assertEquals("*#id", result.toString)
+  }
+
+  @Test
+  def testParseCss8() {
+    val result = TestCssParser.testParse("[att]")
+    Assert.assertEquals("*[*|att]", result.toString)
+  }
+
+  @Test
+  def testParseCss9() {
+    val result = TestCssParser.testParse("""object[type^="image/"]""")
+    Assert.assertEquals("""object[*|type^="image/"]""", result.toString)
+  }
+
+  @Test
+  def testParseCss10() {
+    val result = TestCssParser.testParse("""a[href$=".html"]""")
+    Assert.assertEquals("""a[*|href$=".html"]""", result.toString)
+  }
+
+  @Test
+  def testParseCss11() {
+    val result = TestCssParser.testParse("""p[title*="hello"]""")
+    Assert.assertEquals("""p[*|title*="hello"]""", result.toString)
+  }
+
+  @Test
+  def testParseCss12() {
+    val result = TestCssParser.testParse("""a[hreflang|="en"]""")
+    Assert.assertEquals("""a[*|hreflang|="en"]""", result.toString)
+  }
+
+  @Test
+  def testParseCss13() {
+    val result = TestCssParser.testParse("a[hreflang=en]")
+    Assert.assertEquals("a[*|hreflang=en]", result.toString)
+  }
+
+  @Test
+  def testParseCss14() {
+    val result = TestCssParser.testParse("""a[rel~="copyright"]""")
+    Assert.assertEquals("""a[*|rel~="copyright"]""", result.toString)
+  }
+
+  @Test
+  def testParseCss15() {
+    val result = TestCssParser.testParse("[foo|att=val]")
+    Assert.assertEquals("*[foo|att=val]", result.toString)
+  }
+
+  @Test
+  def testParseCss16() {
+    val result = TestCssParser.testParse("[*|att]")
+    Assert.assertEquals("*[*|att]", result.toString)
+  }
+
+  @Test
+  def testParseCss17() {
+    val result = TestCssParser.testParse("[|att]")
+    Assert.assertEquals("*[|att]", result.toString)
   }
 
 }

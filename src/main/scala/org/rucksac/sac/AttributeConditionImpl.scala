@@ -33,7 +33,7 @@ class AttributeConditionImpl(cType: Short, nsUri: String, name: String, specifie
   case _ => "attrCondition(" + cType + "," + nameToString + "," + value + ")"
   }
 
-  private def nameToString = (if (nsUri != null) "{" + nsUri + "}|" else "") + name
+  private def nameToString = (if (nsUri != null) nsUri + "|" else "*|") + name
 
   private def opToString(op: String) = "[" + nameToString + op + value + "]"
 }
