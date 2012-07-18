@@ -193,13 +193,26 @@ class CssParser extends RegexParsers with CssTokens {
     case typeSel ~ None => AttributeConditionImpl.createAttributeCondition(typeSel)
   }
 
-  def pseudo = ":" ~ opt(":") ~ (functional_pseudo | ident) ^^ { _ => AttributeConditionImpl.createDummyCondition } // TODO
+  def pseudo: Parser[AttributeCondition] = ":" ~ opt(":") ~> (
+    functional_pseudo ^^ { func => AttributeConditionImpl.createPseudoClassCondition(func) }
+      | ident ^^ { id => AttributeConditionImpl.createPseudoClassCondition(id.chars) } )
 
-  def functional_pseudo = "func_pseudo" !!! function ~ optS ~ expression ~ ")"
+  def functional_pseudo: Parser[String] = function ~ optS ~ expression <~ ")" ^^ {
+    case f ~ _ ~ e => f.chars + "(" + e + ")"
+  }
 
-  def expression = simple_expression ~ rep(simple_expression)
+  def expression: Parser[String] = simple_expression ~ rep(simple_expression) ^^ {
+    case simpleEx ~ simpleSeq => (simpleEx :: simpleSeq).mkString(" ")
+  }
 
-  def simple_expression = (plus | "-" | dimension | number | string | ident) <~ optS
+  def simple_expression: Parser[String] = (
+    plus ^^ { _ => "+" }
+      | "-"
+      | dimension ^^ { d => d.chars }
+      | number ^^ { n => n.chars }
+      | string ^^ { s => s.chars }
+      | ident ^^ { i => i.chars }
+    ) <~ optS
 
   def negation: Parser[NegativeCondition] = not ~> optS ~> negation_arg <~ ")" ^^ {
     arg => new NegativeConditionImpl(arg)

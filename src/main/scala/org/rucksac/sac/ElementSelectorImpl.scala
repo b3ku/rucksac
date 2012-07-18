@@ -16,5 +16,5 @@ class ElementSelectorImpl(nsUri: String, name: String) extends SelectorImpl with
 
   def getLocalName = name
 
-  override def toString = (if (nsUri != null) "{" + nsUri + "}|" else "") + (if (name != null) name else "*")
+  override def toString = (if (nsUri != null) nsUri + "|" else "*|") + (if (name != null) name else "*")
 }

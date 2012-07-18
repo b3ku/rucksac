@@ -30,6 +30,7 @@ class AttributeConditionImpl(cType: Short, nsUri: String, name: String, specifie
   case SacExtensions.SAC_ATTRIBUTE_DOLLAR_CONDITION => opToString("$=")
   case SacExtensions.SAC_ATTRIBUTE_HAT_CONDITION => opToString("^=")
   case SacExtensions.SAC_ATTRIBUTE_STAR_CONDITION => opToString("*=")
+  case Condition.SAC_PSEUDO_CLASS_CONDITION => ':' + value
   case _ => "attrCondition(" + cType + "," + nameToString + "," + value + ")"
   }
 
@@ -62,8 +63,15 @@ object AttributeConditionImpl {
       },
       typeSel.getNamespaceURI, typeSel.getLocalName, true, value)
 
-  // TODO remove
-  def createDummyCondition: AttributeCondition = new AttributeConditionImpl(Condition.SAC_ATTRIBUTE_CONDITION, null,
-    "<dummy>", true, "<dummy>")
+  def createPseudoClassCondition(pseudo: String): AttributeCondition =
+    new AttributeConditionImpl(Condition.SAC_PSEUDO_CLASS_CONDITION, null, null, true, pseudo)
+
+
+  // not used (yet):
+  //SAC_POSITIONAL_CONDITION
+  //SAC_LANG_CONDITION
+  //SAC_ONLY_CHILD_CONDITION
+  //SAC_ONLY_TYPE_CONDITION
+  //SAC_CONTENT_CONDITION
 
 }
