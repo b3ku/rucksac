@@ -22,16 +22,10 @@ object Parser extends StdTokenParsers {
     private case class NextSelector(combinator: CombinatorType, selector: Selector)
 
     // Helpers
-    private def selector_sequence(sel: Selector, list: List[NextSelector]): Selector = list.size match {
-        case 0 => sel
-        case _ => selector_sequence(list.head.combinator match {
-            case _ => new SelectorCombinator(sel, list.head.combinator, list.head.selector)
-        }, list.tail)
-    }
-    private def condition_combinator(conditions: List[Condition]): Condition = conditions.size match {
-        case 1 => conditions.head
-        case _ => new CombinatorCondition(conditions.head, condition_combinator(conditions.tail))
-    }
+    private def selector_sequence(sel: Selector, list: List[NextSelector]) =
+        (sel /: list) ( (s, next) => new SelectorCombinator(s, next.combinator, next.selector) )
+    private def condition_combinator(conditions: List[Condition]) =
+        (conditions.head /: conditions.tail) (new CombinatorCondition(_,_))
 
     // Grammar
     protected def s: Parser[String] = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -54,10 +48,7 @@ object Parser extends StdTokenParsers {
             case _ => new ConditionalSelector(sel, condition_combinator(conditions))
         }
     } | rep1(condition) ^^ {
-        case conditions => conditions.size match {
-            case 1 => new ConditionalSelector(Any, conditions.head)
-            case _ => new ConditionalSelector(Any, condition_combinator(conditions))
-        }
+        case conditions => new ConditionalSelector(Any, condition_combinator(conditions))
     }
 
     def namespace_prefix = opt(ident | "*") <~ "|" ^^ {
@@ -74,7 +65,7 @@ object Parser extends StdTokenParsers {
 
     def universal = opt(namespace_prefix) <~ "*" ^^ {
         case Some(prefix) => new ElementSelector(prefix, null)
-        case None => new ElementSelector(null, null)
+        case None => Any
     }
 
     def condition = hash | styleClass | attribute | negation | pseudo
