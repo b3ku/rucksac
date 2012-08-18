@@ -9,9 +9,16 @@ import org.rucksac.NodeBrowser
 
 trait Condition extends Matchable
 
-case class ConditionType(op: String) {override def toString = op}
+sealed abstract class ConditionType(op: String) {
+
+    override def toString = op
+
+}
+
+case class AttributeOperation(op: String) extends ConditionType(op)
 
 case class PseudoFunction(expression: String) extends ConditionType(":")
+
 
 final class NegativeCondition(con: Condition) extends Condition {
 
@@ -43,11 +50,11 @@ final class AttributeCondition(prefix: String, localName: String, value: String,
     def matches[T](node: T, browser: NodeBrowser[T]) = true
 
     override def toString = condition match {
-        case ConditionType("#") => "#" + value
-        case ConditionType(".") => "." + value
+        case AttributeOperation("#") => "#" + value
+        case AttributeOperation(".") => "." + value
         case f: PseudoFunction => ":" + value + "(" + f.expression + ")"
-        case ConditionType(":") => ":" + value
-        case _ => "[" + super.toString + (if (value == null) "" else condition + value) + "]"
+        case AttributeOperation(":") => ":" + value
+        case _ => "[" + super.toString + (if (value == null) ""else condition + value) + "]"
     }
 
 }

@@ -79,9 +79,9 @@ object Parser extends StdTokenParsers {
 
     def condition = hash | styleClass | attribute | negation | pseudo
 
-    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, null, s, ConditionType("#"))}
+    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, null, s, AttributeOperation("#"))}
 
-    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, null, s, ConditionType("."))}
+    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, null, s, AttributeOperation("."))}
 
     def attribute = "[" ~> attribute_name ~ opt(attribute_operation ~ attribute_value) <~ "]" ^^ {
         case name ~ Some(con ~ value) => new AttributeCondition(name.prefix, name.localName, value, con)
@@ -89,7 +89,7 @@ object Parser extends StdTokenParsers {
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
-    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s) ^^ ConditionType
+    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s) ^^ AttributeOperation
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
     def negation = ":not(" ~> opt(s) ~> negation_arg <~ opt(s) <~ ")" ^^ {new NegativeCondition(_)}
@@ -98,7 +98,7 @@ object Parser extends StdTokenParsers {
         universal ^^ {sel => new SelectorCondition(sel)} | hash | styleClass | attribute | pseudo
 
     def pseudo = ":" ~> opt(":") ~>
-        (functional_pseudo | ident ^^ {value => new AttributeCondition(null, null, value, ConditionType(":"))})
+        (functional_pseudo | ident ^^ {value => new AttributeCondition(null, null, value, AttributeOperation(":"))})
 
     def functional_pseudo = (ident <~ "(" <~ opt(s)) ~ expression <~ ")" ^^ {
         case f ~ e => new AttributeCondition(null, null, f, PseudoFunction(e))
