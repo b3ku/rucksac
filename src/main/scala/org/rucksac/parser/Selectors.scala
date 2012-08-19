@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.rucksac.NodeBrowser
+import org.rucksac.{utils,NodeBrowser}
 import collection.mutable
 
 /**
@@ -52,19 +52,7 @@ final class SelectorCombinator(left: Selector, combinator: CombinatorType, right
 
     def matches[T](node: T, browser: NodeBrowser[T]) = right.matches(node, browser) && (combinator.op match {
         case ">" => Option(browser.parent(node)).map({left.matches(_, browser)}).getOrElse(false)
-        case " " => {
-            def matches(parent: T): Boolean = {
-                var result = false
-                if (parent != null) {
-                    result = left.matches(parent, browser)
-                    if (!result) {
-                        result = matches(browser.parent(parent))
-                    }
-                }
-                return result
-            }
-            matches(browser.parent(node))
-        }
+        case " " => utils.matchesAnyParent(node, browser, {p:T => left.matches(p, browser)})
         case "+" => {
             val parent = browser.parent(node);
             var result = false

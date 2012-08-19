@@ -83,9 +83,13 @@ public class QueryTest {
         this.document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         Element root = createElement("foo", "myFoo", null, null);
         root.appendChild(createElement("bar", null, "baz bum", createAttribute("name", "bam")));
-        root.appendChild(createElement("bar", null, "last", createAttribute("name", "bim bam")));
+        Element lastBar = createElement("bar", null, "last", createAttribute("name", "bim bam"));
+        lastBar.appendChild(this.document.createTextNode("Hello World"));
+        root.appendChild(lastBar);
         Element baz = createElement("baz", null, "fazHolder", createAttribute("name", "bim-bam-bum"));
-        baz.appendChild(createElement("faz", null, null, null));
+        baz.getAttributes().setNamedItem(createAttribute("disabled", "disabled"));
+        baz.getAttributes().setNamedItem(createAttribute("checked", "checked"));
+        baz.appendChild(createElement("faz", null, null, createAttribute("lang", "en-us")));
         root.appendChild(baz);
         this.document.appendChild(root);
     }
@@ -196,6 +200,12 @@ public class QueryTest {
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
+        result = $("[name*=bam]");
+        assertEquals("bar", result.next());
+        assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
         result = $("[name*=am]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
@@ -224,21 +234,57 @@ public class QueryTest {
     }
 
     @Test
+    @Ignore
     public void testElementIsNthChild() {
-        fail();
+        Iterator<Node> result = $("#myFoo > :nth-child(3)");
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-child('odd')");
+        assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-child(2n)");
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-child(-n+2)");
+        assertEquals("bar", result.next());
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test
+    @Ignore
     public void testElementIsNthLastChild() {
-        fail();
+        Iterator<Node> result = $("#myFoo > :nth-last-child(3)");
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-last-child('odd')");
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-last-child(2n)");
+        assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :nth-child(-n+2)");
+        assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test
+    @Ignore
     public void testElementIsNthOfType() {
         fail();
     }
 
     @Test
+    @Ignore
     public void testElementIsNthLastOfType() {
         fail();
     }
@@ -322,7 +368,6 @@ public class QueryTest {
     public void testElementWithNoChildren() {
         Iterator<Node> result = $(":empty");
         assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
 
@@ -367,17 +412,28 @@ public class QueryTest {
 
     @Test
     public void testElementIsInLanguage() {
-        fail();
+        Iterator<Node> result = $(":lang(en)");
+        assertEquals("faz", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsEnabledOrDisabled() {
-        fail();
+        Iterator<Node> result = $("#myFoo > :disabled");
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > :enabled");
+        assertEquals("bar", result.next());
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsChecked() {
-        fail();
+        Iterator<Node> result = $("#myFoo > :checked");
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
@@ -387,7 +443,16 @@ public class QueryTest {
 
     @Test
     public void testElementContainsText() {
-        fail();
+        Iterator<Node> result = $(":contains('Hello')");
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $(":contains('World')");
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $(":contains('World!')");
+        assertFalse(result.hasNext());
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
@@ -456,7 +521,18 @@ public class QueryTest {
 
     @Test
     public void testElementNegation() {
-        fail();
+        Iterator<Node> result = $("#myFoo > *[name*=bam]:not(baz)");
+        assertEquals("bar", result.next());
+        assertEquals("bar", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > *[name*=bam]:not([name~=bam])");
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = $("#myFoo > *[name*=bam]:not(:enabled)");
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
     }
 
     @Test

@@ -1,7 +1,7 @@
 package org.rucksac.parser.css
 
 import org.rucksac.NodeBrowser
-import org.w3c.dom.{Element, Node}
+import org.w3c.dom.{Text, Element, Node}
 
 /**
  * @author Andreas Kuhrwahl
@@ -26,10 +26,18 @@ class DomNodeBrowser extends NodeBrowser[Node] {
 
     def name(node: Node) = node match {
         case e: Element => e.getTagName
+        case _ => throw new IllegalArgumentException(node.toString)
     }
 
     def attribute(node: Node, uri: String, name: String) = node match {
         case e: Element => if (uri == null) e.getAttribute(name) else e.getAttributeNS(uri, name)
+    }
+
+    def isText(node: Node) = node.isInstanceOf[Text]
+
+    def text(node: Node) = node match {
+        case t: Text => t.getWholeText
+        case _ => throw new IllegalArgumentException(node.toString)
     }
 
 }

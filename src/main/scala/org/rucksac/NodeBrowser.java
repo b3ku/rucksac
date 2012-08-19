@@ -39,6 +39,10 @@ public interface NodeBrowser<T> {
 
     boolean isElement(T node);
 
+    boolean isText(T node);
+
+    String text(T node);
+
     String namespaceUri(T node);
 
     String name(T node);
