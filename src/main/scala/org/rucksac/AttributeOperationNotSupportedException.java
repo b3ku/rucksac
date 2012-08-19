@@ -27,9 +27,9 @@ package org.rucksac;
  * @author Andreas Kuhrwahl
  * @since 19.08.12
  */
-public class PseudoClassNotSupportedException extends NotSupportedException {
+public class AttributeOperationNotSupportedException extends NotSupportedException {
 
-    public PseudoClassNotSupportedException(String msg) {
+    public AttributeOperationNotSupportedException(String msg) {
         super(msg);
     }
 

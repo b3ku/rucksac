@@ -27,9 +27,9 @@ package org.rucksac;
  * @author Andreas Kuhrwahl
  * @since 19.08.12
  */
-public class PseudoClassNotSupportedException extends NotSupportedException {
+public abstract class NotSupportedException extends QueryException {
 
-    public PseudoClassNotSupportedException(String msg) {
+    public NotSupportedException(String msg) {
         super(msg);
     }
 

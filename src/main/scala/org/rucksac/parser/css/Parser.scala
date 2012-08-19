@@ -22,16 +22,10 @@ object Parser extends StdTokenParsers {
     private case class NextSelector(combinator: CombinatorType, selector: Selector)
 
     // Helpers
-    private def selector_sequence(sel: Selector, list: List[NextSelector]): Selector = list.size match {
-        case 0 => sel
-        case _ => selector_sequence(list.head.combinator match {
-            case _ => new SelectorCombinator(sel, list.head.combinator, list.head.selector)
-        }, list.tail)
-    }
-    private def condition_combinator(conditions: List[Condition]): Condition = conditions.size match {
-        case 1 => conditions.head
-        case _ => new CombinatorCondition(conditions.head, condition_combinator(conditions.tail))
-    }
+    private def selector_sequence(sel: Selector, list: List[NextSelector]) =
+        (sel /: list)((s, next) => new SelectorCombinator(s, next.combinator, next.selector))
+    private def condition_combinator(conditions: List[Condition]) =
+        (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
 
     // Grammar
     protected def s: Parser[String] = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -54,10 +48,7 @@ object Parser extends StdTokenParsers {
             case _ => new ConditionalSelector(sel, condition_combinator(conditions))
         }
     } | rep1(condition) ^^ {
-        case conditions => conditions.size match {
-            case 1 => new ConditionalSelector(Any, conditions.head)
-            case _ => new ConditionalSelector(Any, condition_combinator(conditions))
-        }
+        case conditions => new ConditionalSelector(Any, condition_combinator(conditions))
     }
 
     def namespace_prefix = opt(ident | "*") <~ "|" ^^ {
@@ -74,22 +65,22 @@ object Parser extends StdTokenParsers {
 
     def universal = opt(namespace_prefix) <~ "*" ^^ {
         case Some(prefix) => new ElementSelector(prefix, null)
-        case None => new ElementSelector(null, null)
+        case None => Any
     }
 
     def condition = hash | styleClass | attribute | negation | pseudo
 
-    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, "id", s, ConditionType("#"))}
+    def hash = "#" ~> ident ^^ {s => new Attribute(null, "id", s, "#")}
 
-    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, "class", s, ConditionType("."))}
+    def styleClass = "." ~> ident ^^ {s => new Attribute(null, "class", s, ".")}
 
     def attribute = "[" ~> attribute_name ~ opt(attribute_operation ~ attribute_value) <~ "]" ^^ {
-        case name ~ Some(con ~ value) => new AttributeCondition(name.uri, name.localName, value, con)
-        case name ~ None => new AttributeCondition(name.uri, name.localName, null, null)
+        case name ~ Some(op ~ value) => new Attribute(name.uri, name.localName, value, op)
+        case name ~ None => new Attribute(name.uri, name.localName, null, null)
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
-    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s) ^^ ConditionType
+    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
     def negation = ":not(" ~> opt(s) ~> negation_arg <~ opt(s) <~ ")" ^^ {new NegativeCondition(_)}
@@ -98,10 +89,10 @@ object Parser extends StdTokenParsers {
         universal ^^ {sel => new SelectorCondition(sel)} | hash | styleClass | attribute | pseudo
 
     def pseudo = ":" ~> opt(":") ~>
-        (functional_pseudo | ident ^^ {value => new AttributeCondition(null, null, value, ConditionType(":"))})
+        (functional_pseudo | ident ^^ {name => new PseudoClass(name)})
 
     def functional_pseudo = (ident <~ "(" <~ opt(s)) ~ expression <~ ")" ^^ {
-        case f ~ e => new AttributeCondition(null, null, f, PseudoFunction(e))
+        case f ~ e => new PseudoFunction(f, e)
     }
 
     def expression = rep1(("+" | "-" | dimension | numericLit | stringLit | ident) <~ opt(s)) ^^ {

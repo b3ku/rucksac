@@ -33,8 +33,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.rucksac.AttributeOperationNotSupportedException;
 import org.rucksac.PseudoClassNotSupportedException;
+import org.rucksac.PseudoFunctionNotSupportedException;
+import org.rucksac.SelectorCombinatorNotSupportedException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -517,6 +521,28 @@ public class QueryTest {
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
+    }
+
+    @Test(expected = PseudoFunctionNotSupportedException.class)
+    public void testPseudoFunctionNotSupportedException() {
+        $("::foo(bar)");
+    }
+
+    @Test(expected = SelectorCombinatorNotSupportedException.class)
+    @Ignore
+    public void testSelectorCombinatorNotSupportedException() {
+        $("foo < bar");
+    }
+
+    @Test(expected = PseudoClassNotSupportedException.class)
+    public void testPseudoClassNotSupportedException() {
+        $(":foo");
+    }
+
+    @Test(expected = AttributeOperationNotSupportedException.class)
+    @Ignore
+    public void testAttributeOperationNotSupportedException() {
+        $("[foo!=bar]");
     }
 
 }

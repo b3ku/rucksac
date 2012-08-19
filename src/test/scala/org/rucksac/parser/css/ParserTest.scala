@@ -213,4 +213,10 @@ class ParserTest {
         Assert.assertEquals("*|*:not(:notX(x))", result.toString)
     }
 
+    @Test
+    def testParseCss27() {
+        val result = Parser.parse("a#id.class.clazz:hidden[rel=foo]")
+        Assert.assertEquals("*|a#id.class.clazz:hidden[*|rel=foo]", result.toString)
+    }
+
 }
