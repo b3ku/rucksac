@@ -23,9 +23,9 @@ object Parser extends StdTokenParsers {
 
     // Helpers
     private def selector_sequence(sel: Selector, list: List[NextSelector]) =
-        (sel /: list) ( (s, next) => new SelectorCombinator(s, next.combinator, next.selector) )
+        (sel /: list)((s, next) => new SelectorCombinator(s, next.combinator, next.selector))
     private def condition_combinator(conditions: List[Condition]) =
-        (conditions.head /: conditions.tail) (new CombinatorCondition(_,_))
+        (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
 
     // Grammar
     protected def s: Parser[String] = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -70,29 +70,29 @@ object Parser extends StdTokenParsers {
 
     def condition = hash | styleClass | attribute | negation | pseudo
 
-    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, null, s, AttributeOperation("#"))}
+    def hash = "#" ~> ident ^^ {s => new conditions.Attribute(null, "id", s, "#")}
 
-    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, null, s, AttributeOperation("."))}
+    def styleClass = "." ~> ident ^^ {s => new conditions.Attribute(null, "class", s, ".")}
 
     def attribute = "[" ~> attribute_name ~ opt(attribute_operation ~ attribute_value) <~ "]" ^^ {
-        case name ~ Some(con ~ value) => new AttributeCondition(name.prefix, name.localName, value, con)
-        case name ~ None => new AttributeCondition(name.prefix, name.localName, null, null)
+        case name ~ Some(op ~ value) => new conditions.Attribute(name.uri, name.localName, value, op)
+        case name ~ None => new conditions.Attribute(name.uri, name.localName, null, null)
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
-    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s) ^^ AttributeOperation
+    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
-    def negation = ":not(" ~> opt(s) ~> negation_arg <~ opt(s) <~ ")" ^^ {new NegativeCondition(_)}
+    def negation = ":not(" ~> opt(s) ~> negation_arg <~ opt(s) <~ ")" ^^ {new conditions.NegativeCondition(_)}
 
-    def negation_arg = type_selector ^^ {sel => new SelectorCondition(sel)} |
-        universal ^^ {sel => new SelectorCondition(sel)} | hash | styleClass | attribute | pseudo
+    def negation_arg = type_selector ^^ {sel => new conditions.SelectorCondition(sel)} |
+        universal ^^ {sel => new conditions.SelectorCondition(sel)} | hash | styleClass | attribute | pseudo
 
     def pseudo = ":" ~> opt(":") ~>
-        (functional_pseudo | ident ^^ {value => new AttributeCondition(null, null, value, AttributeOperation(":"))})
+        (functional_pseudo | ident ^^ {name => new conditions.PseudoClass(name)})
 
     def functional_pseudo = (ident <~ "(" <~ opt(s)) ~ expression <~ ")" ^^ {
-        case f ~ e => new AttributeCondition(null, null, f, PseudoFunction(e))
+        case f ~ e => new conditions.PseudoFunction(f, e)
     }
 
     def expression = rep1(("+" | "-" | dimension | numericLit | stringLit | ident) <~ opt(s)) ^^ {

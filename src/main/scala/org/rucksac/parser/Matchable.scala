@@ -7,6 +7,4 @@ import org.rucksac.NodeBrowser
  * @since 12.08.12
  */
 
-protected trait Matchable {
-    def matches[T](node: T, browser: NodeBrowser[T]): Boolean
-}
+protected trait Matchable {def matches[T](node: T, browser: NodeBrowser[T]): Boolean}

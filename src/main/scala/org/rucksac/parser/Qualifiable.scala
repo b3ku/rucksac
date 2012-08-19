@@ -1,5 +1,6 @@
 package org.rucksac.parser
 
-protected case class Qualifiable(prefix: String, localName: String) {
-    override def toString = (if (prefix != null) prefix + "|" else "*|") + (if (localName != null) localName else "*")
+//TODO really support namespaces!
+protected case class Qualifiable(uri: String, localName: String) {
+    override def toString = (if (uri != null) uri + "|" else "*|") + (if (localName != null) localName else "*")
 }

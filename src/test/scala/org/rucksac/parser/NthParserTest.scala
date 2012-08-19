@@ -1,6 +1,8 @@
-package org.rucksac.parser.css
+package org.rucksac.parser
 
+import css.{NthParser, PositionMatcher}
 import org.junit.{Assert, Test}
+import org.rucksac.ParseException
 
 /**
  * @author Oliver Becker
@@ -71,27 +73,27 @@ class NthParserTest {
         assertMatch("-2n+3", List(1, 3), List(-1, 0, 2, 4, 5, 6, 7, 10, 15, 42))
     }
 
-    @Test(expected = classOf[IllegalArgumentException])
+    @Test(expected = classOf[ParseException])
     def testIllegal1() {
         NthParser.parse("3 n")
     }
 
-    @Test(expected = classOf[IllegalArgumentException])
+    @Test(expected = classOf[ParseException])
     def testIllegal2() {
         NthParser.parse("+ 2n")
     }
 
-    @Test(expected = classOf[IllegalArgumentException])
+    @Test(expected = classOf[ParseException])
     def testIllegal3() {
         NthParser.parse("+ 2")
     }
 
-    @Test(expected = classOf[IllegalArgumentException])
+    @Test(expected = classOf[ParseException])
     def testIllegal4() {
         NthParser.parse("10n+-1")
     }
 
-    @Test(expected = classOf[IllegalArgumentException])
+    @Test(expected = classOf[ParseException])
     def testIllegal5() {
         NthParser.parse("2m+1")
     }

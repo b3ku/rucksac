@@ -1,5 +1,6 @@
 package org.rucksac.parser.css
 
+import org.rucksac.ParseException
 
 /**
  * Parser for nth grammar in CSS 3 selectors (for :nth-child(...) etc)
@@ -12,18 +13,17 @@ object NthParser {
 
     private val regex = """(?i)\s*((([-+]?)(\d*))n\s*(([-+])\s*(\d+))?|(([-+]?)(\d+))|(odd)|(even))\s*""".r
 
-//    private val factorGroup = 2
-    private val factorSignGroup = 3
-    private val factorNumberGroup = 4
-//    private val shiftGroup = 5
-    private val shiftSignGroup = 6
-    private val shiftNumberGroup = 7
-    private val singleShiftGroup = 8
-    private val singleShiftSignGroup = 9
+    //    private val factorGroup = 2
+    private val factorSignGroup        = 3
+    private val factorNumberGroup      = 4
+    //    private val shiftGroup = 5
+    private val shiftSignGroup         = 6
+    private val shiftNumberGroup       = 7
+    private val singleShiftGroup       = 8
+    private val singleShiftSignGroup   = 9
     private val singleShiftNumberGroup = 10
-    private val oddGroup = 11
-    private val evenGroup = 12
-
+    private val oddGroup               = 11
+    private val evenGroup              = 12
 
     def parse(s: String): PositionMatcher = {
 
@@ -45,7 +45,7 @@ object NthParser {
                     matcher.group(shiftSignGroup), matcher.group(shiftNumberGroup))
             }
         } else {
-            throw new IllegalArgumentException(s)
+            throw new ParseException(s)
         }
 
     }
