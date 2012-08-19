@@ -10,11 +10,12 @@ class NthParserTest {
 
     def testEvenOdd(matcher: PositionMatcher, odd: Boolean) {
         Assert.assertNotNull(matcher)
+        Assert.assertFalse(matcher.matches(-1))
+        Assert.assertFalse(matcher.matches(0))
         Assert.assertTrue(odd == matcher.matches(1))
         Assert.assertTrue(odd == matcher.matches(3))
         Assert.assertTrue(odd == matcher.matches(5))
         Assert.assertTrue(odd == matcher.matches(127))
-        Assert.assertFalse(odd == matcher.matches(0))
         Assert.assertFalse(odd == matcher.matches(2))
         Assert.assertFalse(odd == matcher.matches(4))
         Assert.assertFalse(odd == matcher.matches(6))
@@ -33,7 +34,6 @@ class NthParserTest {
     def testEven() {
         testEvenOdd(NthParser.parse("2n+0"), false)
         testEvenOdd(NthParser.parse("2n"), false)
-        testEvenOdd(NthParser.parse("-2n"), false)
         testEvenOdd(NthParser.parse("even"), false)
         testEvenOdd(NthParser.parse("EVEN"), false)
     }
@@ -42,6 +42,7 @@ class NthParserTest {
     def testDefault() {
         val matcher = NthParser.parse("4n+2")
         Assert.assertNotNull(matcher)
+        Assert.assertFalse(matcher.matches(-1))
         Assert.assertFalse(matcher.matches(0))
         Assert.assertFalse(matcher.matches(1))
         Assert.assertTrue(matcher.matches(2))
@@ -57,6 +58,7 @@ class NthParserTest {
     def testPlusMinus() {
         def testMatch(matcher: PositionMatcher) {
             Assert.assertNotNull(matcher)
+            Assert.assertFalse(matcher.matches(-1))
             Assert.assertFalse(matcher.matches(0))
             Assert.assertFalse(matcher.matches(1))
             Assert.assertFalse(matcher.matches(8))
@@ -77,6 +79,7 @@ class NthParserTest {
     def testFactorZero() {
         def testMatch(matcher: PositionMatcher) {
             Assert.assertNotNull(matcher)
+            Assert.assertFalse(matcher.matches(-1))
             Assert.assertFalse(matcher.matches(0))
             Assert.assertFalse(matcher.matches(1))
             Assert.assertFalse(matcher.matches(2))
@@ -94,7 +97,8 @@ class NthParserTest {
     def testFactorOne() {
         def testMatch(matcher: PositionMatcher) {
             Assert.assertNotNull(matcher)
-            Assert.assertTrue(matcher.matches(0))
+            Assert.assertFalse(matcher.matches(-1))
+            Assert.assertFalse(matcher.matches(0))
             Assert.assertTrue(matcher.matches(1))
             Assert.assertTrue(matcher.matches(2))
             Assert.assertTrue(matcher.matches(5))
@@ -102,12 +106,63 @@ class NthParserTest {
             Assert.assertTrue(matcher.matches(15))
             Assert.assertTrue(matcher.matches(42))
         }
-        testMatch(NthParser.parse("1n+7"))
         testMatch(NthParser.parse("1n+0"))
         testMatch(NthParser.parse("1n"))
         testMatch(NthParser.parse("n"))
         testMatch(NthParser.parse("+n"))
-        testMatch(NthParser.parse("-n"))
+    }
+
+    @Test
+    def testFactorOneWithShift() {
+        def testMatch(matcher: PositionMatcher) {
+            Assert.assertNotNull(matcher)
+            Assert.assertFalse(matcher.matches(-1))
+            Assert.assertFalse(matcher.matches(0))
+            Assert.assertFalse(matcher.matches(1))
+            Assert.assertFalse(matcher.matches(2))
+            Assert.assertTrue(matcher.matches(3))
+            Assert.assertTrue(matcher.matches(4))
+            Assert.assertTrue(matcher.matches(10))
+            Assert.assertTrue(matcher.matches(15))
+            Assert.assertTrue(matcher.matches(42))
+        }
+        testMatch(NthParser.parse("1n+3"))
+        testMatch(NthParser.parse("+n+3"))
+    }
+
+    @Test
+    def testFactorMinusOneShift() {
+        def testMatch(matcher: PositionMatcher) {
+            Assert.assertNotNull(matcher)
+            Assert.assertFalse(matcher.matches(-1))
+            Assert.assertFalse(matcher.matches(0))
+            Assert.assertTrue(matcher.matches(1))
+            Assert.assertTrue(matcher.matches(2))
+            Assert.assertTrue(matcher.matches(3))
+            Assert.assertFalse(matcher.matches(4))
+            Assert.assertFalse(matcher.matches(10))
+            Assert.assertFalse(matcher.matches(15))
+            Assert.assertFalse(matcher.matches(42))
+        }
+        testMatch(NthParser.parse("-1n+3"))
+        testMatch(NthParser.parse("-n+3"))
+    }
+
+    @Test
+    def testFactorMinusShift() {
+        def testMatch(matcher: PositionMatcher) {
+            Assert.assertNotNull(matcher)
+            Assert.assertFalse(matcher.matches(-1))
+            Assert.assertFalse(matcher.matches(0))
+            Assert.assertTrue(matcher.matches(1))
+            Assert.assertFalse(matcher.matches(2))
+            Assert.assertTrue(matcher.matches(3))
+            Assert.assertFalse(matcher.matches(4))
+            Assert.assertFalse(matcher.matches(10))
+            Assert.assertFalse(matcher.matches(15))
+            Assert.assertFalse(matcher.matches(42))
+        }
+        testMatch(NthParser.parse("-2n+3"))
     }
 
     @Test(expected = classOf[IllegalArgumentException])
