@@ -23,26 +23,14 @@
  */
 package org.rucksac;
 
-import java.util.List;
-
 /**
  * @author Andreas Kuhrwahl
- * @since 12.08.12
+ * @since 19.08.12
  */
-public interface NodeBrowser<T> {
+public class PseudoClassNotSupportedException extends QueryException {
 
-    T document(T node);
-
-    T parent(T node);
-
-    List<? extends T> children(T node);
-
-    boolean isElement(T node);
-
-    String namespaceUri(T node);
-
-    String name(T node);
-
-    String attribute(T node, String uri, String name);
+    public PseudoClassNotSupportedException(String msg) {
+        super(msg);
+    }
 
 }

@@ -79,13 +79,13 @@ object Parser extends StdTokenParsers {
 
     def condition = hash | styleClass | attribute | negation | pseudo
 
-    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, null, s, ConditionType("#"))}
+    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, "id", s, ConditionType("#"))}
 
-    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, null, s, ConditionType("."))}
+    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, "class", s, ConditionType("."))}
 
     def attribute = "[" ~> attribute_name ~ opt(attribute_operation ~ attribute_value) <~ "]" ^^ {
-        case name ~ Some(con ~ value) => new AttributeCondition(name.prefix, name.localName, value, con)
-        case name ~ None => new AttributeCondition(name.prefix, name.localName, null, null)
+        case name ~ Some(con ~ value) => new AttributeCondition(name.uri, name.localName, value, con)
+        case name ~ None => new AttributeCondition(name.uri, name.localName, null, null)
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
