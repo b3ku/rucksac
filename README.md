@@ -1,7 +1,11 @@
 rucksac
 =======
 
-W3C SAC 1.3 Implementation
+### CSS 3 Selectors parser
 
-see http://www.w3.org/Style/CSS/SAC/
 
+see http://www.w3.org/TR/selectors/
+
+
+Note:
+rucksac was originally intended as an implementation of the Simple API for CSS (SAC), however this API is outdated and deprecated
