@@ -48,7 +48,6 @@ import org.w3c.dom.Node;
  * @author Andreas Kuhrwahl
  * @since 10.08.12
  */
-//TODO Travis-CI!
 public class QueryTest {
 
     private Document document;
