@@ -234,7 +234,6 @@ public class QueryTest {
     }
 
     @Test
-    @Ignore
     public void testElementIsNthChild() {
         Iterator<Node> result = $("#myFoo > :nth-child(3)");
         assertEquals("baz", result.next());
@@ -256,7 +255,6 @@ public class QueryTest {
     }
 
     @Test
-    @Ignore
     public void testElementIsNthLastChild() {
         Iterator<Node> result = $("#myFoo > :nth-last-child(3)");
         assertEquals("bar", result.next());
@@ -264,14 +262,14 @@ public class QueryTest {
 
         result = $("#myFoo > :nth-last-child('odd')");
         assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
         result = $("#myFoo > :nth-last-child(2n)");
         assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-child(-n+2)");
+        result = $("#myFoo > :nth-last-child(-n+2)");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());

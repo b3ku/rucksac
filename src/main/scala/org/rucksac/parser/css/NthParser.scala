@@ -13,10 +13,10 @@ object NthParser {
 
     private val regex = """(?i)\s*((([-+]?)(\d*))n\s*(([-+])\s*(\d+))?|(([-+]?)(\d+))|(odd)|(even))\s*""".r
 
-    private val factorGroup            = 2
+    //    private val factorGroup = 2
     private val factorSignGroup        = 3
     private val factorNumberGroup      = 4
-    private val shiftGroup             = 5
+    //    private val shiftGroup = 5
     private val shiftSignGroup         = 6
     private val shiftNumberGroup       = 7
     private val singleShiftGroup       = 8
@@ -56,10 +56,12 @@ case class PositionMatcher(factor: Int, shift: Int) {
 
     def matches(position: Int) = {
         val v = position - shift
-        if (factor == 0) {
+        if (position < 1) {
+            false
+        } else if (factor == 0) {
             v == 0
         } else {
-            v % factor == 0
+            v % factor == 0 && v / factor >= 0
         }
     }
 
@@ -73,14 +75,14 @@ object PositionMatcher {
 
     def create(factorSign: String, factorNumber: String, shiftSign: String, shiftNumber: String) = {
         var factor = 1
-        if (factorNumber != null && factorNumber.length > 0) {
+        if (factorNumber != null && !factorNumber.isEmpty) {
             factor = factorNumber.toInt
         }
         if ("-" == factorSign) {
             factor = -factor
         }
         var shift = 0
-        if (shiftNumber != null && shiftNumber.length > 0) {
+        if (shiftNumber != null && !shiftNumber.isEmpty) {
             shift = shiftNumber.toInt
         }
         if ("-" == shiftSign) {
