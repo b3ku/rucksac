@@ -18,7 +18,7 @@ final class CombinatorCondition(first: Condition, second: Condition) extends Con
 
 }
 
-final object conditions {
+object conditions {
 
     final class NegativeCondition(con: Condition) extends Condition {
 
