@@ -1,4 +1,4 @@
-package org.rucksac.parser.css
+package org.rucksac.parser
 
 import org.rucksac.ParseException
 

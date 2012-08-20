@@ -1,6 +1,5 @@
 package org.rucksac.parser
 
-import css.NthParser
 import org.rucksac.{utils, PseudoFunctionNotSupportedException, PseudoClassNotSupportedException, AttributeOperationNotSupportedException, NodeBrowser}
 
 /**

@@ -1,6 +1,5 @@
 package org.rucksac.parser
 
-import css.{NthParser, PositionMatcher}
 import org.junit.{Assert, Test}
 import org.rucksac.ParseException
 
