@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.rucksac.{utils,NodeBrowser}
+import org.rucksac.{utils,NodeBrowser, NodeMatcher}
 import collection.mutable
 
 /**
@@ -17,7 +17,7 @@ case class CombinatorType(op: String) {
 
 }
 
-trait Selector extends Matchable
+trait Selector extends NodeMatcher
 
 trait SimpleSelector extends Selector
 
@@ -53,27 +53,13 @@ final class SelectorCombinator(left: Selector, combinator: CombinatorType, right
     def matches[T](node: T, browser: NodeBrowser[T]) = right.matches(node, browser) && (combinator.op match {
         case ">" => Option(browser.parent(node)).map({left.matches(_, browser)}).getOrElse(false)
         case " " => utils.matchesAnyParent(node, browser, {p:T => left.matches(p, browser)})
-        case "+" => {
-            val parent = browser.parent(node);
-            var result = false
-            if (parent != null) {
-                val children = browser.children(parent)
-                val index = children.indexOf(node)
-                if (index > 0) {
-                    result = left.matches(children.get(index - 1), browser)
-                }
-            }
-            result
-        }
-        case "~" => {
-            val parent = browser.parent(node)
-            var result = false
-            if (parent != null) {
-                val children: mutable.Buffer[_ <: T] = browser.children(parent)
-                result = children.take(children.indexOf(node)).filter({left.matches(_, browser)}).nonEmpty
-            }
-            result
-        }
+        case "+" =>
+            val siblings = utils.siblingsAndMe(node, browser)
+            val index = siblings.indexOf(node)
+            index > 0 && left.matches(siblings.get(index - 1), browser)
+        case "~" =>
+            val children: mutable.Buffer[_ <: T] = utils.siblingsAndMe(node, browser)
+            children.take(children.indexOf(node)).filter({left.matches(_, browser)}).nonEmpty
     })
 
     override def toString = left.toString + combinator + right

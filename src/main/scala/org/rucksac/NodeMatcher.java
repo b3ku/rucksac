@@ -25,12 +25,10 @@ package org.rucksac;
 
 /**
  * @author Andreas Kuhrwahl
- * @since 19.08.12
+ * @since 21.08.12
  */
-public abstract class NotSupportedException extends ParseException {
+public interface NodeMatcher {
 
-    public NotSupportedException(String msg) {
-        super(msg);
-    }
+    <T> boolean matches(T node, NodeBrowser<T> browser);
 
 }

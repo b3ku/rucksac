@@ -1,13 +1,13 @@
 package org.rucksac.parser
 
-import org.rucksac.{utils, PseudoFunctionNotSupportedException, PseudoClassNotSupportedException, AttributeOperationNotSupportedException, NodeBrowser}
+import org.rucksac.{utils, PseudoFunctionNotSupportedException, PseudoClassNotSupportedException, AttributeOperationNotSupportedException, NodeBrowser, NodeMatcher}
 
 /**
  * @author Andreas Kuhrwahl
  * @since 15.08.12
  */
 
-trait Condition extends Matchable
+trait Condition extends NodeMatcher
 
 final class CombinatorCondition(first: Condition, second: Condition) extends Condition {
 
@@ -37,25 +37,21 @@ final class Attribute(uri: String, localName: String, value: String, op: String)
     extends Qualifiable(uri, localName) with Condition {
 
     def matches[T](node: T, browser: NodeBrowser[T]) = {
-        val attrValue = browser.attribute(node, uri, localName)
+        val attrValue = Option(browser.attribute(node, uri, localName)).orElse(Option("")).get
         op match {
-            case "#" => attrValue == value
-            case "." => Option(attrValue).orElse(Option("")).get.split(" ") contains value
-            case "=" => attrValue == value
-            case "~=" => Option(attrValue).orElse(Option("")).get.split(" ") contains value
-            case "|=" => attrValue == value ||
-                Option(attrValue).orElse(Option("")).get.startsWith(value + "-")
-            case "^=" => Option(attrValue).orElse(Option("")).get startsWith value
-            case "$=" => Option(attrValue).orElse(Option("")).get endsWith value
-            case "*=" => Option(attrValue).orElse(Option("")).get contains value
-            case null => attrValue != null && attrValue != ""
+            case op if op == "#" || op == "=" => attrValue == value
+            case op if op == "." || op == "~=" => attrValue.split(" ") contains value
+            case "|=" => attrValue == value || attrValue.startsWith(value + "-")
+            case "^=" => attrValue startsWith value
+            case "$=" => attrValue endsWith value
+            case "*=" => attrValue contains value
+            case null => attrValue != ""
             case _ => throw new AttributeOperationNotSupportedException(op)
         }
     }
 
     override def toString = op match {
-        case "#" => "#" + value
-        case "." => "." + value
+        case op if op == "#" || op == "." => op + value
         case _ => "[" + super.toString + (if (value == null) "" else op + value) + "]"
     }
 
@@ -67,24 +63,24 @@ final class PseudoClass(name: String) extends Condition {
 
     def matches[T](node: T, browser: NodeBrowser[T]) = {
         def ofType(f: Iterable[T] => Boolean): Boolean = {
-            val children: Iterable[T] = Option(browser.parent(node)).map({browser.children(_)}).get
             val (name, namespaceUri) = (browser.name(node), browser.namespaceUri(node))
-            children != null && f(children.filter(
-            {c => browser.isElement(c) && browser.name(c) == name && browser.namespaceUri(c) == namespaceUri}))
+            val isType: T => Boolean = {
+                c => browser.isElement(c) && browser.name(c) == name && browser.namespaceUri(c) == namespaceUri
+            }
+            val siblings: Iterable[T] = utils.siblingsAndMe(node, browser)
+            f(siblings.filter(isType))
         }
         name match {
-            case "first-child" => Option(browser.parent(node)).map({browser.children(_).indexOf(node)}).get == 0
-            case "last-child" => {
-                val parent = Option(browser.parent(node))
-                parent.map({browser.children(_).indexOf(node)}).get ==
-                    parent.map({browser.children(_).size() - 1}).getOrElse(0)
-            }
-            case "only-child" => Option(browser.parent(node)).map({browser.children(_).size}).get == 1
-            case "empty" => Option(browser.children(node)).map({_.size()}).get == 0
-            case "root" => browser.document(node) == browser.parent(node)
+            case "first-child" => utils.siblingsAndMe(node, browser).indexOf(node) == 0
+            case "last-child" =>
+                val siblings = utils.siblingsAndMe(node, browser)
+                siblings.indexOf(node) == siblings.size - 1
+            case "only-child" => utils.siblingsAndMe(node, browser).size == 1
             case "only-of-type" => ofType {_.size == 1}
             case "first-of-type" => ofType {_.head == node}
             case "last-of-type" => ofType {_.last == node}
+            case "root" => browser.document(node) == browser.parent(node)
+            case "empty" => Option(browser.children(node)).map({_.size()}).get == 0
             case "enabled" => Option(browser.attribute(node, null, "disabled")).getOrElse("enabled") != "disabled"
             case "disabled" => browser.attribute(node, null, "disabled") == "disabled"
             case "checked" => browser.attribute(node, null, "checked") == "checked"
@@ -103,23 +99,23 @@ final class PseudoFunction(name: String, exp: String) extends Condition {
     lazy val positionMatcher = NthParser.parse(exp)
 
     def matches[T](node: T, browser: NodeBrowser[T]) = name match {
-        case "nth-child" => positionMatcher
-            .matches(Option(browser.parent(node)).map({browser.children(_).indexOf(node) + 1}).getOrElse(-1))
-        case "nth-last-child" => positionMatcher
-            .matches(
-            Option(browser.parent(node)).map({c => browser.children(c).size() - browser.children(c).indexOf(node)})
-                .getOrElse(-1))
+        case "nth-child" =>
+            val siblings = utils.siblingsAndMe(node, browser)
+            positionMatcher.matches(siblings.indexOf(node) + 1)
+        case "nth-last-child" =>
+            val siblings = utils.siblingsAndMe(node, browser)
+            positionMatcher.matches(siblings.size - siblings.indexOf(node))
         case "contains" => {
             val children: Iterable[T] = browser.children(node)
-            children != null &&
-                children.filter(browser.isText(_)).map(browser.text(_)).filter(_.contains(exp)).nonEmpty
+            children != null && children.filter(browser.isText(_)).map(browser.text(_)).filter(_.contains(exp)).nonEmpty
         }
-        case "lang" => val matches: (T) => Boolean = {
-            p: T =>
-                val lang: String = Option(browser.attribute(p, null, "lang")).getOrElse("")
-                lang == exp || lang.startsWith(exp + "-")
-        }
-        matches(node) || utils.matchesAnyParent(node, browser, matches)
+        case "lang" =>
+            val matches: (T) => Boolean = {
+                p: T =>
+                    val lang: String = Option(browser.attribute(p, null, "lang")).getOrElse("")
+                    lang == exp || lang.startsWith(exp + "-")
+            }
+            matches(node) || utils.matchesAnyParent(node, browser, matches)
         case _ => throw new PseudoFunctionNotSupportedException(name)
     }
 

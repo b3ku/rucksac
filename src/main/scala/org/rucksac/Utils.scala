@@ -1,5 +1,7 @@
 package org.rucksac
 
+import java.util.Collections
+
 /**
  * @author Andreas Kuhrwahl
  * @since 19.08.12
@@ -18,5 +20,8 @@ package object utils {
         }
         return result
     }
+
+    def siblingsAndMe[T](node: T, browser: NodeBrowser[T]) = Option(browser.parent(node)).map({browser.children(_)})
+        .getOrElse(Collections.singletonList(node))
 
 }
