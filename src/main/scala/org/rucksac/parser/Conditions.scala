@@ -39,8 +39,8 @@ final class Attribute(uri: String, localName: String, value: String, op: String)
     def matches[T](node: T, browser: NodeBrowser[T]) = {
         val attrValue = Option(browser.attribute(node, uri, localName)).orElse(Option("")).get
         op match {
-            case op if op == "#" || op == "=" => attrValue == value
-            case op if op == "." || op == "~=" => attrValue.split(" ") contains value
+            case "#" | "=" => attrValue == value
+            case "." | "~=" => attrValue.split(" ") contains value
             case "|=" => attrValue == value || attrValue.startsWith(value + "-")
             case "^=" => attrValue startsWith value
             case "$=" => attrValue endsWith value
@@ -51,7 +51,7 @@ final class Attribute(uri: String, localName: String, value: String, op: String)
     }
 
     override def toString = op match {
-        case op if op == "#" || op == "." => op + value
+        case "#" | "." => op + value
         case _ => "[" + super.toString + (if (value == null) "" else op + value) + "]"
     }
 
