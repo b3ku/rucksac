@@ -40,7 +40,8 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
         case seq ~ list => selector_sequence(seq, list)
     }
 
-    private val combinators = (("+" | ">" | "~") /: registry.getSupportedSelectorCombinators)((x, y) => y | x)
+    private val combinators = (("+" | ">" | "~") /: registry.getSupportedSelectorCombinators)(
+        (combs, comb) => comb | combs)
     def combinator = ((opt(s) ~> combinators <~ opt(s)) | s) ^^ CombinatorType
 
     def simple_selector_sequence = (type_selector | universal) ~ rep(condition) ^^ {
@@ -82,7 +83,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
     private val attribute_operations = (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /:
-        registry.getSupportedAttributeOperations)((x, y) => y | x)
+        registry.getSupportedAttributeOperations)((ops, op) => op | ops)
     protected def attribute_operation = attribute_operations <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
@@ -103,8 +104,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     }
 
     def parse(s: String) = {
-        val tokens = new lexical.Scanner(s)
-        phrase(selectors_group)(tokens)
+        phrase(selectors_group)(new lexical.Scanner(s))
     } match {
         case Success(x, _) => new SelectorList(x)
         case NoSuccess(msg, _) => throw new ParseException(msg)
@@ -120,10 +120,7 @@ class SelectorList(selectors: List[Selector]) {
         val matches = new ListBuffer[T]
         def applySelector(node: T, sel: Selector) {
             if (sel(node, browser)) matches += node
-            if (browser.isElement(node)) {
-                val children: Iterable[T] = browser.children(node)
-                children.foreach({n => applySelector(n, sel)})
-            }
+            if (browser.isElement(node)) browser.children(node).foreach({n => applySelector(n, sel)})
         }
         selectors.foreach({s => applySelector(node, s)})
         matches

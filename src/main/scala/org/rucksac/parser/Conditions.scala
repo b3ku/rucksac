@@ -38,7 +38,7 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
     extends Qualifiable(uri, name) with Condition {
 
     def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) && {
-        val attrValue = attribute(node, browser, uri, name)
+        lazy val attrValue = attribute(node, browser, uri, name)
         op match {
             case "#" | "=" => attrValue == value
             case "." | "~=" => attrValue.split(" ") contains value
@@ -46,7 +46,7 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
             case "^=" => attrValue startsWith value
             case "$=" => attrValue endsWith value
             case "*=" => attrValue contains value
-            case null => attrValue != ""
+            case null => browser.attribute(node, uri, name) != null
             case s: String => browser.findAttributeOperationMatcher(s)(node, browser, uri, name, value)
         }
     }
