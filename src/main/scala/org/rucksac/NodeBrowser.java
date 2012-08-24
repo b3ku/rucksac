@@ -41,7 +41,11 @@ public interface NodeBrowser<T> {
     T parent(T node);
 
     /**
+     * Must be invoked on element nodes only.
+     *
      * @return the child nodes of <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
      */
     List<? extends T> children(T node);
 

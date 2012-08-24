@@ -16,9 +16,12 @@ class DomNodeBrowser extends NodeBrowser[Node] {
         case _ => null // Document
     }
 
-    def children(node: Node) = {
-        val children = node.getChildNodes
-        (0 until children.getLength).map({i => children.item(i)})
+    def children(node: Node) = node match {
+        case e: Element => {
+            val children = e.getChildNodes
+            (0 until children.getLength).map({i => children.item(i)})
+        }
+        case _ => throw new IllegalArgumentException(node.toString)
     }
 
     def isElement(node: Node) = node.isInstanceOf[Element]
@@ -31,8 +34,8 @@ class DomNodeBrowser extends NodeBrowser[Node] {
     }
 
     def name(node: Node) = node match {
-    case e: Element => if (e.getLocalName != null) e.getLocalName else e.getTagName
-    case _ => throw new IllegalArgumentException(node.toString)
+        case e: Element => if (e.getLocalName != null) e.getLocalName else e.getTagName
+        case _ => throw new IllegalArgumentException(node.toString)
     }
 
     def namespaceUri(node: Node) = node match {

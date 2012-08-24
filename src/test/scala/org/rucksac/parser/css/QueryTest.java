@@ -53,7 +53,7 @@ public class QueryTest {
     private Document document;
 
     private Iterator<Node> filter(String query) {
-        return new Query<Node>(query).filter(this.document).iterator();
+        return new Query<Node>(query).filter(this.document.getDocumentElement()).iterator();
     }
 
     private Element createElement(String name, String id, String styleClass, Attr attr) {
