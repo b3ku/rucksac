@@ -14,7 +14,7 @@ import collection.mutable.ListBuffer
  * @since 13.05.12
  */
 
-class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
+class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
     type Tokens = Lexer
     val lexical = new Tokens(registry)
