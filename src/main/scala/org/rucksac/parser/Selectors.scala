@@ -1,7 +1,7 @@
 package org.rucksac.parser
 
-import org.rucksac.{utils,NodeBrowser, NodeMatcher}
-import collection.mutable
+import org.rucksac.utils._
+import org.rucksac.NodeBrowser
 
 /**
  * @author Andreas Kuhrwahl
@@ -17,26 +17,26 @@ case class CombinatorType(op: String) {
 
 }
 
-trait Selector extends NodeMatcher
+trait Selector extends Matchable
 
 trait SimpleSelector extends Selector
 
 final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Selector {
 
-    def matches[T](node: T, browser: NodeBrowser[T]) = sel.matches(node, browser) && con.matches(node, browser)
+    def apply[T](node: T, browser: NodeBrowser[T]) = sel(node, browser) && con(node, browser)
 
     override def toString = sel.toString + con.toString
 
 }
 
-class ElementSelector(uri: String, name: String) extends Qualifiable(uri, name) with SimpleSelector {
+class ElementSelector(uri: String, tagName: String) extends Qualifiable(uri, tagName) with SimpleSelector {
 
-    def matches[T](node: T, browser: NodeBrowser[T]) = {
+    def apply[T](node: T, browser: NodeBrowser[T]) = {
         var matches = browser.isElement(node)
         if (matches) {
-            matches = name == null
+            matches = tagName == null
             if (!matches) {
-                matches = name == browser.name(node) && (uri == null || uri == browser.namespaceUri(node))
+                matches = tagName == browser.name(node) && (uri == null || uri == namespaceUri(node, browser))
             }
         }
         matches
@@ -46,20 +46,18 @@ class ElementSelector(uri: String, name: String) extends Qualifiable(uri, name) 
 
 object Any extends ElementSelector(null, null)
 
-final class SelectorCombinator(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
+final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    import scala.collection.JavaConversions._
-
-    def matches[T](node: T, browser: NodeBrowser[T]) = right.matches(node, browser) && (combinator.op match {
-        case ">" => Option(browser.parent(node)).map({left.matches(_, browser)}).getOrElse(false)
-        case " " => utils.matchesAnyParent(node, browser, {p:T => left.matches(p, browser)})
+    def apply[T](node: T, browser: NodeBrowser[T]) = right(node, browser) && (combinator.op match {
+        case ">" => parent(node, browser).map({left(_, browser)}).getOrElse(false)
+        case " " => matchesAnyParent(node, browser, {p: T => left(p, browser)})
         case "+" =>
-            val siblings = utils.siblingsAndMe(node, browser)
-            val index = siblings.indexOf(node)
-            index > 0 && left.matches(siblings.get(index - 1), browser)
+            val children = siblings(node, browser)
+            val index = children.indexOf(node)
+            index > 0 && left(children(index - 1), browser)
         case "~" =>
-            val children: mutable.Buffer[_ <: T] = utils.siblingsAndMe(node, browser)
-            children.take(children.indexOf(node)).filter({left.matches(_, browser)}).nonEmpty
+            val children = siblings(node, browser)
+            children.take(children.indexOf(node)).filter({left(_, browser)}).nonEmpty
     })
 
     override def toString = left.toString + combinator + right

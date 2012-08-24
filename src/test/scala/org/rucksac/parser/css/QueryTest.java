@@ -52,8 +52,8 @@ public class QueryTest {
 
     private Document document;
 
-    private Iterator<Node> $(String query) {
-        return Query.<Node>$(query).filter(this.document).iterator();
+    private Iterator<Node> filter(String query) {
+        return new Query<Node>(query).filter(this.document).iterator();
     }
 
     private Element createElement(String name, String id, String styleClass, Attr attr) {
@@ -101,7 +101,7 @@ public class QueryTest {
 
     @Test
     public void testAnyElement() {
-        Iterator<Node> result = $("*");
+        Iterator<Node> result = filter("*");
         assertEquals("foo", result.next());
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
@@ -112,16 +112,16 @@ public class QueryTest {
 
     @Test
     public void testElementOfType() {
-        Iterator<Node> result = $("bar");
+        Iterator<Node> result = filter("bar");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("foo");
+        result = filter("foo");
         assertEquals("foo", result.next());
         assertFalse(result.hasNext());
 
-        result = $("foo, bar");
+        result = filter("foo, bar");
         assertEquals("foo", result.next());
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
@@ -130,12 +130,12 @@ public class QueryTest {
 
     @Test
     public void testElementWithAttribute() {
-        Iterator<Node> result = $("bar[name]");
+        Iterator<Node> result = filter("bar[name]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("*[name]");
+        result = filter("*[name]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
@@ -144,34 +144,34 @@ public class QueryTest {
 
     @Test
     public void testElementWithAttributeValue() {
-        Iterator<Node> result = $("bar[name=bam]");
+        Iterator<Node> result = filter("bar[name=bam]");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIncludesOneAttributeValue() {
-        Iterator<Node> result = $("[name~=bam]");
+        Iterator<Node> result = filter("[name~=bam]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name~=bim]");
+        result = filter("[name~=bim]");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name~=bi]");
+        result = filter("[name~=bi]");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementStartsWithAttributeValue() {
-        Iterator<Node> result = $("[name^=bim]");
+        Iterator<Node> result = filter("[name^=bim]");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name^=b]");
+        result = filter("[name^=b]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
@@ -180,12 +180,12 @@ public class QueryTest {
 
     @Test
     public void testElementEndsWithAttributeValue() {
-        Iterator<Node> result = $("[name$=bam]");
+        Iterator<Node> result = filter("[name$=bam]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name$=m]");
+        result = filter("[name$=m]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
@@ -194,18 +194,18 @@ public class QueryTest {
 
     @Test
     public void testElementContainsAttributeValue() {
-        Iterator<Node> result = $("[name*=bi]");
+        Iterator<Node> result = filter("[name*=bi]");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name*=bam]");
+        result = filter("[name*=bam]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name*=am]");
+        result = filter("[name*=am]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
@@ -214,40 +214,40 @@ public class QueryTest {
 
     @Test
     public void testElementStartsWithHyphenatedAttributeValue() {
-        Iterator<Node> result = $("[name|=bim]");
+        Iterator<Node> result = filter("[name|=bim]");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("[name|=bum]");
+        result = filter("[name|=bum]");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsRoot() {
-        Iterator<Node> result = $(":root");
+        Iterator<Node> result = filter(":root");
         assertEquals("foo", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar:root");
+        result = filter("bar:root");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsNthChild() {
-        Iterator<Node> result = $("#myFoo > :nth-child(3)");
+        Iterator<Node> result = filter("#myFoo > :nth-child(3)");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-child('odd')");
+        result = filter("#myFoo > :nth-child('odd')");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-child(2n)");
+        result = filter("#myFoo > :nth-child(2n)");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-child(-n+2)");
+        result = filter("#myFoo > :nth-child(-n+2)");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
@@ -255,20 +255,20 @@ public class QueryTest {
 
     @Test
     public void testElementIsNthLastChild() {
-        Iterator<Node> result = $("#myFoo > :nth-last-child(3)");
+        Iterator<Node> result = filter("#myFoo > :nth-last-child(3)");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-last-child('odd')");
+        result = filter("#myFoo > :nth-last-child('odd')");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-last-child(2n)");
+        result = filter("#myFoo > :nth-last-child(2n)");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :nth-last-child(-n+2)");
+        result = filter("#myFoo > :nth-last-child(-n+2)");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
@@ -288,15 +288,15 @@ public class QueryTest {
 
     @Test
     public void testElementIsFirstChild() {
-        Iterator<Node> result = $("bar:first-child");
+        Iterator<Node> result = filter("bar:first-child");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.baz:first-child");
+        result = filter("bar.baz:first-child");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $(":first-child");
+        result = filter(":first-child");
         assertEquals("foo", result.next());
         assertEquals("bar", result.next());
         assertEquals("faz", result.next());
@@ -305,22 +305,22 @@ public class QueryTest {
 
     @Test
     public void testElementIsLastChild() {
-        Iterator<Node> result = $("bar:last-child");
+        Iterator<Node> result = filter("bar:last-child");
         assertFalse(result.hasNext());
 
-        result = $("baz:last-child");
+        result = filter("baz:last-child");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsFirstOfType() {
-        Iterator<Node> result = $("#myFoo > :first-of-type");
+        Iterator<Node> result = filter("#myFoo > :first-of-type");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > bar:first-of-type");
+        result = filter("#myFoo > bar:first-of-type");
         Element element = (Element) result.next();
         Assert.assertEquals("bar", element.getTagName());
         Assert.assertEquals("bam", element.getAttribute("name"));
@@ -329,12 +329,12 @@ public class QueryTest {
 
     @Test
     public void testElementIsLastOfType() {
-        Iterator<Node> result = $("#myFoo > :last-of-type");
+        Iterator<Node> result = filter("#myFoo > :last-of-type");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > bar:last-of-type");
+        result = filter("#myFoo > bar:last-of-type");
         Element element = (Element) result.next();
         Assert.assertEquals("bar", element.getTagName());
         Assert.assertEquals("bim bam", element.getAttribute("name"));
@@ -343,84 +343,84 @@ public class QueryTest {
 
     @Test
     public void testElementIsOnlyChild() {
-        Iterator<Node> result = $("faz:only-child");
+        Iterator<Node> result = filter("faz:only-child");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("* > bar:only-child");
+        result = filter("* > bar:only-child");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsOnlyOfType() {
-        Iterator<Node> result = $("bar:only-of-type");
+        Iterator<Node> result = filter("bar:only-of-type");
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > baz:only-of-type");
+        result = filter("#myFoo > baz:only-of-type");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementWithNoChildren() {
-        Iterator<Node> result = $(":empty");
+        Iterator<Node> result = filter(":empty");
         assertEquals("bar", result.next());
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
 
-        result = $(".fazHolder > faz:empty");
+        result = filter(".fazHolder > faz:empty");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
 
-        result = $(".fazHolder > :empty");
+        result = filter(".fazHolder > :empty");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsHyperLink() {
-        $(":link");
+        filter(":link");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsVisitedHyperLink() {
-        $(":visited");
+        filter(":visited");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsActivated() {
-        $(":active");
+        filter(":active");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsHovered() {
-        $(":hover");
+        filter(":hover");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsFocused() {
-        $(":focus");
+        filter(":focus");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsTarget() {
-        $(":target");
+        filter(":target");
     }
 
     @Test
     public void testElementIsInLanguage() {
-        Iterator<Node> result = $(":lang(en)");
+        Iterator<Node> result = filter(":lang(en)");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsEnabledOrDisabled() {
-        Iterator<Node> result = $("#myFoo > :disabled");
+        Iterator<Node> result = filter("#myFoo > :disabled");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > :enabled");
+        result = filter("#myFoo > :enabled");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
@@ -428,169 +428,169 @@ public class QueryTest {
 
     @Test
     public void testElementIsChecked() {
-        Iterator<Node> result = $("#myFoo > :checked");
+        Iterator<Node> result = filter("#myFoo > :checked");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testElementIsIndeterminate() {
-        $(":indeterminate");
+        filter(":indeterminate");
     }
 
     @Test
     public void testElementContainsText() {
-        Iterator<Node> result = $(":contains('Hello')");
+        Iterator<Node> result = filter(":contains('Hello')");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $(":contains('World')");
+        result = filter(":contains('World')");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $(":contains('World!')");
+        result = filter(":contains('World!')");
         assertFalse(result.hasNext());
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testFirstFormattedLineOfElement() {
-        $("::first-line");
+        filter("::first-line");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testFirstFormattedLetterOfElement() {
-        $("::first-letter");
+        filter("::first-letter");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testCurrentSelectionOfElement() {
-        $("::selection");
+        filter("::selection");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testGeneratedContentBeforeOfElement() {
-        $("::before");
+        filter("::before");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testGeneratedContentAfterOfElement() {
-        $("::after");
+        filter("::after");
     }
 
     @Test
     public void testElementWithClass() {
-        Iterator<Node> result = $(".baz");
+        Iterator<Node> result = filter(".baz");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.baz.bum[name]");
+        result = filter("bar.baz.bum[name]");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $(".bam");
+        result = filter(".bam");
         assertFalse(result.hasNext());
 
-        result = $("bar.baz");
+        result = filter("bar.baz");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.bum");
+        result = filter("bar.bum");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("foo.baz");
+        result = filter("foo.baz");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementWithId() {
-        Iterator<Node> result = $("#myFoo");
+        Iterator<Node> result = filter("#myFoo");
         assertEquals("foo", result.next());
         assertFalse(result.hasNext());
 
-        result = $("foo#myFoo");
+        result = filter("foo#myFoo");
         assertEquals("foo", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar#myFoo");
+        result = filter("bar#myFoo");
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementNegation() {
-        Iterator<Node> result = $("#myFoo > *[name*=bam]:not(baz)");
+        Iterator<Node> result = filter("#myFoo > *[name*=bam]:not(baz)");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > *[name*=bam]:not([name~=bam])");
+        result = filter("#myFoo > *[name*=bam]:not([name~=bam])");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > *[name*=bam]:not(:enabled)");
+        result = filter("#myFoo > *[name*=bam]:not(:enabled)");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsDescendant() {
-        Iterator<Node> result = $("#myFoo [name~=bam]");
+        Iterator<Node> result = filter("#myFoo [name~=bam]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo faz");
+        result = filter("#myFoo faz");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo .fazHolder[name] faz");
+        result = filter("#myFoo .fazHolder[name] faz");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsChild() {
-        Iterator<Node> result = $("#myFoo > [name~=bam]");
+        Iterator<Node> result = filter("#myFoo > [name~=bam]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > faz");
+        result = filter("#myFoo > faz");
         assertFalse(result.hasNext());
 
-        result = $("#myFoo > .fazHolder[name] > faz");
+        result = filter("#myFoo > .fazHolder[name] > faz");
         assertEquals("faz", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsDirectAdjacent() {
-        Iterator<Node> result = $("#myFoo + bar");
+        Iterator<Node> result = filter("#myFoo + bar");
         assertFalse(result.hasNext());
 
-        result = $("bar.last + baz");
+        result = filter("bar.last + baz");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.last + .fazHolder");
+        result = filter("bar.last + .fazHolder");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.bum + [name~=bam]");
+        result = filter("bar.bum + [name~=bam]");
         assertEquals("bar", result.next());
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsPreceded() {
-        Iterator<Node> result = $("#myFoo ~ bar");
+        Iterator<Node> result = filter("#myFoo ~ bar");
         assertFalse(result.hasNext());
 
-        result = $("bar.baz ~ baz");
+        result = filter("bar.baz ~ baz");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
 
-        result = $("bar.bum ~ [name*=bam]");
+        result = filter("bar.bum ~ [name*=bam]");
         assertEquals("bar", result.next());
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
@@ -598,24 +598,24 @@ public class QueryTest {
 
     @Test(expected = PseudoFunctionNotSupportedException.class)
     public void testPseudoFunctionNotSupportedException() {
-        $("::foo(bar)");
+        filter("::foo(bar)");
     }
 
     @Test(expected = SelectorCombinatorNotSupportedException.class)
     @Ignore
     public void testSelectorCombinatorNotSupportedException() {
-        $("foo < bar");
+        filter("foo < bar");
     }
 
     @Test(expected = PseudoClassNotSupportedException.class)
     public void testPseudoClassNotSupportedException() {
-        $(":foo");
+        filter(":foo");
     }
 
     @Test(expected = AttributeOperationNotSupportedException.class)
     @Ignore
     public void testAttributeOperationNotSupportedException() {
-        $("[foo!=bar]");
+        filter("[foo!=bar]");
     }
 
 }

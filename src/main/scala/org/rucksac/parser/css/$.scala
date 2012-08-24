@@ -1,6 +1,7 @@
 package org.rucksac.parser.css
 
 import org.rucksac.NodeBrowser
+import org.rucksac.parser.DomNodeBrowser
 
 /**
  * @author Andreas Kuhrwahl
@@ -18,15 +19,17 @@ private class nodeBrowser[T] extends (() => NodeBrowser[T]) {
 
 }
 
-case class Query[T](q: Option[String]) {
+case class Query[T](q: String) {
 
     import scala.collection.JavaConversions._
 
-    val selectors               = Parser.parse(q.orElse(Option("")).get)
+    val selectors               = Parser.parse(Option(q).orElse(Option("")).get)
     val browser: NodeBrowser[T] = new nodeBrowser[T]()()
 
     def filter(node: T): java.lang.Iterable[T] = this.selectors.filter(node, this.browser)
 
 }
 
-object Query {def $[T](query: String) = Query[T](Option(query))}
+object $ {
+    def apply[T](query: String) = Query[T](query)
+}

@@ -23,12 +23,12 @@ object Parser extends StdTokenParsers {
 
     // Helpers
     private def selector_sequence(sel: Selector, list: List[NextSelector]) =
-        (sel /: list)((s, next) => new SelectorCombinator(s, next.combinator, next.selector))
+        (sel /: list)((s, next) => new SelectorCombinatorSelector(s, next.combinator, next.selector))
     private def condition_combinator(conditions: List[Condition]) =
         (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
 
     // Grammar
-    protected def s: Parser[String] = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
+    protected def s = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
     protected def comma = opt(s) ~> "," <~ opt(s)
     protected def dimension = elem("dimension", _.isInstanceOf[lexical.Dimension])
 
@@ -70,13 +70,13 @@ object Parser extends StdTokenParsers {
 
     def condition = hash | styleClass | attribute | negation | pseudo
 
-    def hash = "#" ~> ident ^^ {s => new Attribute(null, "id", s, "#")}
+    def hash = "#" ~> ident ^^ {s => new AttributeCondition(null, "id", s, "#")}
 
-    def styleClass = "." ~> ident ^^ {s => new Attribute(null, "class", s, ".")}
+    def styleClass = "." ~> ident ^^ {s => new AttributeCondition(null, "class", s, ".")}
 
     def attribute = "[" ~> attribute_name ~ opt(attribute_operation ~ attribute_value) <~ "]" ^^ {
-        case name ~ Some(op ~ value) => new Attribute(name.uri, name.localName, value, op)
-        case name ~ None => new Attribute(name.uri, name.localName, null, null)
+        case name ~ Some(op ~ value) => new AttributeCondition(name.uri, name.localName, value, op)
+        case name ~ None => new AttributeCondition(name.uri, name.localName, null, null)
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
@@ -89,10 +89,10 @@ object Parser extends StdTokenParsers {
         universal ^^ {sel => new SelectorCondition(sel)} | hash | styleClass | attribute | pseudo
 
     def pseudo = ":" ~> opt(":") ~>
-        (functional_pseudo | ident ^^ {name => new PseudoClass(name)})
+        (functional_pseudo | ident ^^ {name => new PseudoClassCondition(name)})
 
     def functional_pseudo = (ident <~ "(" <~ opt(s)) ~ expression <~ ")" ^^ {
-        case f ~ e => new PseudoFunction(f, e)
+        case f ~ e => new PseudoFunctionCondition(f, e)
     }
 
     def expression = rep1(("+" | "-" | dimension | numericLit | stringLit | ident) <~ opt(s)) ^^ {
@@ -116,7 +116,7 @@ class SelectorList(selectors: List[Selector]) {
     def filter[T](node: T, browser: NodeBrowser[T]) = {
         val matches = new ListBuffer[T]
         def applySelector(node: T, sel: Selector) {
-            if (sel.matches(node, browser)) matches += node
+            if (sel(node, browser)) matches += node
             val children: Iterable[T] = browser.children(node)
             children.foreach({n => applySelector(n, sel)})
         }
