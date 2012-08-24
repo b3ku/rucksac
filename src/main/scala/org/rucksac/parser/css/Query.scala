@@ -29,7 +29,3 @@ case class Query[T](q: String) {
     def filter(node: T): java.lang.Iterable[T] = this.selectors.filter(node, this.browser)
 
 }
-
-object $ {
-    def apply[T](query: String) = Query[T](query)
-}

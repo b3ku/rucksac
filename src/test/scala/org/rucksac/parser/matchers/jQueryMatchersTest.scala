@@ -4,7 +4,6 @@ import org.junit.Test
 import javax.xml.parsers.DocumentBuilderFactory
 import org.rucksac.parser.css._
 import org.junit.Assert._
-import org.w3c.dom.Element
 
 /**
  * @author Andreas Kuhrwahl
@@ -28,7 +27,7 @@ class jQueryMatchersTest {
 
     @Test
     def testButton() {
-        val result = $(":button").filter(root).iterator()
+        val result = Query(":button").filter(root).iterator()
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)
@@ -36,17 +35,17 @@ class jQueryMatchersTest {
 
     @Test
     def testNe() {
-        var result = $("[class=oink]").filter(root).iterator()
-        assertEquals("root", result.next().asInstanceOf[Element].getTagName)
+        var result = Query("[class=oink]").filter(root).iterator()
+        assertEquals("root", result.next().getTagName)
         assertFalse(result.hasNext)
 
-        result = $("[class!=oink]").filter(root).iterator()
+        result = Query("[class!=oink]").filter(root).iterator()
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)
 
-        result = $("[class!='']").filter(root).iterator()
-        assertEquals("root", result.next().asInstanceOf[Element].getTagName)
+        result = Query("[class!='']").filter(root).iterator()
+        assertEquals("root", result.next().getTagName)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)
