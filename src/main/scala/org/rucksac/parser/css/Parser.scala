@@ -24,19 +24,8 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     // Helpers
     private def selector_sequence(sel: Selector, list: List[NextSelector]) =
         (sel /: list)((s, next) => new SelectorCombinatorSelector(s, next.combinator, next.selector))
-
     private def condition_combinator(conditions: List[Condition]) =
         (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
-
-    private def attribute_operations = {
-        val ops: Iterable[String] = List("~=", "^=", "$=", "*=", "|=") ++ registry.getSupportedAttributeOperations
-        (keyword("=") /: ops)((x, y) => y | x)
-    }
-
-    private def combinators = {
-        val ops: Iterable[String] = List(">", "~") ++ registry.getSupportedSelectorCombinators
-        (keyword("+") /: ops)((x, y) => y | x)
-    }
 
     // Grammar
     protected def s = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -51,6 +40,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
         case seq ~ list => selector_sequence(seq, list)
     }
 
+    private val combinators = (("+" | ">" | "~") /: registry.getSupportedSelectorCombinators)((x, y) => y | x)
     def combinator = ((opt(s) ~> combinators <~ opt(s)) | s) ^^ CombinatorType
 
     def simple_selector_sequence = (type_selector | universal) ~ rep(condition) ^^ {
@@ -91,6 +81,8 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
+    private val attribute_operations = (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /:
+        registry.getSupportedAttributeOperations)((x, y) => y | x)
     protected def attribute_operation = attribute_operations <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
