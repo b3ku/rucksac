@@ -24,29 +24,59 @@
 package org.rucksac;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Andreas Kuhrwahl
  * @since 12.08.12
  */
-public interface NodeBrowser<T> {
+public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
 
-    T document(T node);
+    private final Map<String, PseudoClassMatcher> pseudoClasses = new ConcurrentHashMap<String, PseudoClassMatcher>();
 
-    T parent(T node);
+    public NodeBrowser() {
+        init();
+    }
 
-    List<? extends T> children(T node);
+    @Override
+    public void registerPseudoClassMatcher(String pattern, PseudoClassMatcher pc) {
+        this.pseudoClasses.put(pattern, pc);
+    }
 
-    boolean isElement(T node);
+    @Override
+    public PseudoClassMatcher findPseudoClassMatcher(String name) {
+        //TODO patternmatcher
+        PseudoClassMatcher pc = this.pseudoClasses.get(name);
+        if (pc == null) {
+            throw new PseudoClassNotSupportedException(name);
+        }
+        return pc;
+    }
 
-    boolean isText(T node);
+    protected final void applyNodeMatcherRegistrar(NodeMatcherRegistrar registrar) {
+        registrar.registerNodeMatchers(this);
+    }
 
-    String text(T node);
+    protected void init() {
+    }
 
-    String namespaceUri(T node);
+    public abstract T document(T node);
 
-    String name(T node);
+    public abstract T parent(T node);
 
-    String attribute(T node, String uri, String name);
+    public abstract List<? extends T> children(T node);
+
+    public abstract boolean isElement(T node);
+
+    public abstract boolean isText(T node);
+
+    public abstract String text(T node);
+
+    public abstract String namespaceUri(T node);
+
+    public abstract String name(T node);
+
+    public abstract String attribute(T node, String uri, String name);
 
 }

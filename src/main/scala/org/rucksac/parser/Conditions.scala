@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.rucksac.{NodeBrowser, PseudoClassNotSupportedException, PseudoFunctionNotSupportedException, AttributeOperationNotSupportedException}
+import org.rucksac.{NodeBrowser, PseudoFunctionNotSupportedException, AttributeOperationNotSupportedException}
 import org.rucksac.utils._
 
 /**
@@ -34,12 +34,12 @@ final class SelectorCondition(sel: Selector) extends Condition {
 
 }
 
-final class AttributeCondition(uri: String, localName: String, value: String, operation: String)
+final class AttributeCondition(uri: String, localName: String, value: String, op: String)
     extends Qualifiable(uri, localName) with Condition {
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = {
+    def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) && {
         val attrValue = attribute(node, browser, uri, localName)
-        operation match {
+        op match {
             case "#" | "=" => attrValue == value
             case "." | "~=" => attrValue.split(" ") contains value
             case "|=" => attrValue == value || attrValue.startsWith(value + "-")
@@ -47,13 +47,13 @@ final class AttributeCondition(uri: String, localName: String, value: String, op
             case "$=" => attrValue endsWith value
             case "*=" => attrValue contains value
             case null => attrValue != ""
-            case _ => throw new AttributeOperationNotSupportedException(operation)
+            case _ => throw new AttributeOperationNotSupportedException(op)
         }
     }
 
-    override def toString = operation match {
-        case "#" | "." => operation + value
-        case _ => "[" + super.toString + (if (value == null) "" else operation + value) + "]"
+    override def toString = op match {
+        case "#" | "." => op + value
+        case _ => "[" + super.toString + (if (value == null) "" else op + value) + "]"
     }
 
 }
@@ -78,10 +78,10 @@ final class PseudoClassCondition(pc: String) extends Condition {
             case "last-of-type" => ofType {_.last == node}
             case "root" => document(node, browser).get == parent(node, browser).get
             case "empty" => children(node, browser).isEmpty
-            case "enabled" => attribute(node, browser, null, "disabled") != "disabled"
-            case "disabled" => attribute(node, browser, null, "disabled") == "disabled"
-            case "checked" => attribute(node, browser, null, "checked") == "checked"
-            case _ => throw new PseudoClassNotSupportedException(pc)
+            case "enabled" => browser.isElement(node) && attribute(node, browser, "disabled") != "disabled"
+            case "disabled" => browser.isElement(node) && attribute(node, browser, "disabled") == "disabled"
+            case "checked" => browser.isElement(node) && attribute(node, browser, "checked") == "checked"
+            case s: String => browser.findPseudoClassMatcher(s)(node, browser)
         }
     }
 
@@ -102,10 +102,10 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
         case "lang" =>
             val matches: (T) => Boolean = {
                 p: T =>
-                    val lang: String = attribute(p, browser, null, "lang")
+                    val lang: String = attribute(p, browser, "lang")
                     lang == exp || lang.startsWith(exp + "-")
             }
-            matches(node) || matchesAnyParent(node, browser, matches)
+            (browser.isElement(node) && matches(node)) || matchesAnyParent(node, browser, matches)
         case _ => throw new PseudoFunctionNotSupportedException(name)
     }
 

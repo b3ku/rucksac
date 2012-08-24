@@ -1,6 +1,7 @@
 package org.rucksac.parser
 
 import org.rucksac.NodeBrowser
+import org.rucksac.matchers._
 import org.w3c.dom.{Text, Element, Node}
 
 /**
@@ -31,6 +32,7 @@ class DomNodeBrowser extends NodeBrowser[Node] {
 
     def attribute(node: Node, uri: String, name: String) = node match {
         case e: Element => if (uri == null) e.getAttribute(name) else e.getAttributeNS(uri, name)
+        case _ => throw new IllegalArgumentException(node.toString)
     }
 
     def isText(node: Node) = node.isInstanceOf[Text]
@@ -38,6 +40,10 @@ class DomNodeBrowser extends NodeBrowser[Node] {
     def text(node: Node) = node match {
         case t: Text => t.getWholeText
         case _ => throw new IllegalArgumentException(node.toString)
+    }
+
+    protected override def init() {
+        applyNodeMatcherRegistrar(jQueryMatcherRegistrar)
     }
 
 }

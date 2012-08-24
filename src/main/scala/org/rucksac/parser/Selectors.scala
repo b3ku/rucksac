@@ -31,16 +31,8 @@ final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Sel
 
 class ElementSelector(uri: String, tagName: String) extends Qualifiable(uri, tagName) with SimpleSelector {
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = {
-        var matches = browser.isElement(node)
-        if (matches) {
-            matches = tagName == null
-            if (!matches) {
-                matches = tagName == browser.name(node) && (uri == null || uri == namespaceUri(node, browser))
-            }
-        }
-        matches
-    }
+    def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) &&
+        (tagName == null || (tagName == browser.name(node) && (uri == null || uri == namespaceUri(node, browser))))
 
 }
 
