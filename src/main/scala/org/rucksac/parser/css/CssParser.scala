@@ -28,15 +28,11 @@ class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     private def condition_combinator(conditions: List[Condition]) =
         (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
 
-    private def attribute_operations = {
-        val ops: Iterable[String] = List("~=", "^=", "$=", "*=", "|=") ++ registry.getSupportedAttributeOperations
-        (keyword("=") /: ops)((x, y) => y | x)
-    }
+    private def attribute_operations =
+        (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /: registry.getSupportedAttributeOperations)((ops, op) => op | ops)
 
-    private def combinators = {
-        val ops: Iterable[String] = List(">", "~") ++ registry.getSupportedSelectorCombinators
-        (keyword("+") /: ops)((x, y) => y | x)
-    }
+    private def combinators =
+        ((">" | "+" | "~") /: registry.getSupportedSelectorCombinators)((ops, op) => op | ops)
 
     // Grammar
     protected def s = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -111,8 +107,7 @@ class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     }
 
     def parse(s: String) = {
-        val tokens = new lexical.Scanner(s)
-        phrase(selectors_group)(tokens)
+        phrase(selectors_group)(new lexical.Scanner(s))
     } match {
         case Success(x, _) => new SelectorList(x)
         case NoSuccess(msg, _) => throw new ParseException(msg)
@@ -127,10 +122,11 @@ class SelectorList(selectors: List[Selector]) {
     def filter[T](node: T, browser: NodeBrowser[T]) = {
         val matches = new ListBuffer[T]
         def applySelector(node: T, sel: Selector) {
-            if (sel(node, browser)) matches += node
+            if (sel(node, browser)) {
+                matches += node
+            }
             if (browser.isElement(node)) {
-                val children: Iterable[T] = browser.children(node)
-                children.foreach({n => applySelector(n, sel)})
+                browser.children(node).foreach({n => applySelector(n, sel)})
             }
         }
         selectors.foreach({s => applySelector(node, s)})

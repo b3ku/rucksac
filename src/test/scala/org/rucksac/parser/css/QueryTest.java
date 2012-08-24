@@ -87,6 +87,7 @@ public class QueryTest {
         Element baz = createElement("baz", null, "fazHolder", createAttribute("name", "bim-bam-bum"));
         baz.getAttributes().setNamedItem(createAttribute("disabled", "disabled"));
         baz.getAttributes().setNamedItem(createAttribute("checked", "checked"));
+        baz.getAttributes().setNamedItem(createAttribute("dummy", ""));
         baz.appendChild(createElement("faz", null, null, createAttribute("lang", "en-us")));
         root.appendChild(baz);
         this.document.appendChild(root);
@@ -137,6 +138,10 @@ public class QueryTest {
         result = filter("*[name]");
         assertEquals("bar", result.next());
         assertEquals("bar", result.next());
+        assertEquals("baz", result.next());
+        assertFalse(result.hasNext());
+
+        result = filter("[dummy]");
         assertEquals("baz", result.next());
         assertFalse(result.hasNext());
     }
