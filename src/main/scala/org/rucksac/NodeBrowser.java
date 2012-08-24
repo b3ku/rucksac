@@ -28,6 +28,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Interface for traversing a hierarchical node tree (having nodes of type <code>T</code>) that represents a HTML or XML
+ * data structure.
+ *
  * @author Andreas Kuhrwahl
  * @since 12.08.12
  */
@@ -112,22 +115,66 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     protected void init() {
     }
 
-    public abstract T document(T node);
-
+    /**
+     * @return the parent element node of <code>node</code> or <code>null</code> if <code>node</code> is the root
+     *         element
+     */
     public abstract T parent(T node);
 
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the child nodes of <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
     public abstract List<? extends T> children(T node);
 
+    /**
+     * @return <code>true</code> of <code>node</code> is an element
+     */
     public abstract boolean isElement(T node);
 
+    /**
+     * @return <code>true</code> of <code>node</code> is a text node
+     */
     public abstract boolean isText(T node);
 
+    /**
+     * Must be invoked on text nodes only.
+     *
+     * @return the text contents of given text <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-text node
+     * @see #isText(Object)
+     */
     public abstract String text(T node);
 
-    public abstract String namespaceUri(T node);
-
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the local name for the given element <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
     public abstract String name(T node);
 
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the namespace uri for the given element <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
+    public abstract String namespaceUri(T node);
+
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the attribute value for the attribute <code>name</code> having the namespace uri <code>uri</code> of the
+     *         given element <code>node</code> or <code>null</code> if there is no such attribute
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
     public abstract String attribute(T node, String uri, String name);
 
 }

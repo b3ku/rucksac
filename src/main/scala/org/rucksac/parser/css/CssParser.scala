@@ -128,8 +128,10 @@ class SelectorList(selectors: List[Selector]) {
         val matches = new ListBuffer[T]
         def applySelector(node: T, sel: Selector) {
             if (sel(node, browser)) matches += node
-            val children: Iterable[T] = browser.children(node)
-            children.foreach({n => applySelector(n, sel)})
+            if (browser.isElement(node)) {
+                val children: Iterable[T] = browser.children(node)
+                children.foreach({n => applySelector(n, sel)})
+            }
         }
         selectors.foreach({s => applySelector(node, s)})
         matches

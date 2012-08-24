@@ -28,7 +28,7 @@ class jQueryMatchersTest {
 
     @Test
     def testButton() {
-        val result = $(":button").filter(document).iterator()
+        val result = $(":button").filter(root).iterator()
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)
@@ -36,16 +36,16 @@ class jQueryMatchersTest {
 
     @Test
     def testNe() {
-        var result = $("[class=oink]").filter(document).iterator()
+        var result = $("[class=oink]").filter(root).iterator()
         assertEquals("root", result.next().asInstanceOf[Element].getTagName)
         assertFalse(result.hasNext)
 
-        result = $("[class!=oink]").filter(document).iterator()
+        result = $("[class!=oink]").filter(root).iterator()
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)
 
-        result = $("[class!='']").filter(document).iterator()
+        result = $("[class!='']").filter(root).iterator()
         assertEquals("root", result.next().asInstanceOf[Element].getTagName)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
