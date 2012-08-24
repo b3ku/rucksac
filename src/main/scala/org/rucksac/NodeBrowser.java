@@ -26,27 +26,70 @@ package org.rucksac;
 import java.util.List;
 
 /**
+ * Interface for traversing a hierarchical node tree (having nodes of type <code>T</code>) that represents a HTML or XML
+ * data structure.
+ *
  * @author Andreas Kuhrwahl
  * @since 12.08.12
  */
 public interface NodeBrowser<T> {
 
-    T document(T node);
-
+    /**
+     * @return the parent element node of <code>node</code> or <code>null</code> if <code>node</code> is the root
+     *         element
+     */
     T parent(T node);
 
+    /**
+     * @return the child nodes of <code>node</code>
+     */
     List<? extends T> children(T node);
 
+    /**
+     * @return <code>true</code> of <code>node</code> is an element
+     */
     boolean isElement(T node);
 
+    /**
+     * @return <code>true</code> of <code>node</code> is a text node
+     */
     boolean isText(T node);
 
+    /**
+     * Must be invoked on text nodes only.
+     *
+     * @return the text contents of given text <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-text node
+     * @see #isText(Object)
+     */
     String text(T node);
 
-    String namespaceUri(T node);
-
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the local name for the given element <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
     String name(T node);
 
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the namespace uri for the given element <code>node</code>
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
+    String namespaceUri(T node);
+
+    /**
+     * Must be invoked on element nodes only.
+     *
+     * @return the attribute value for the attribute <code>name</code> having the namespace uri <code>uri</code> of the
+     *         given element <code>node</code> or <code>null</code> if there is no such attribute
+     * @throws IllegalArgumentException when invoked on a non-element node
+     * @see #isElement(Object)
+     */
     String attribute(T node, String uri, String name);
 
 }

@@ -76,7 +76,7 @@ final class PseudoClassCondition(pc: String) extends Condition {
             case "only-of-type" => ofType {_.size == 1}
             case "first-of-type" => ofType {_.head == node}
             case "last-of-type" => ofType {_.last == node}
-            case "root" => document(node, browser).get == parent(node, browser).get
+            case "root" => browser.parent(node) == null
             case "empty" => children(node, browser).isEmpty
             case "enabled" => attribute(node, browser, null, "disabled") != "disabled"
             case "disabled" => attribute(node, browser, null, "disabled") == "disabled"

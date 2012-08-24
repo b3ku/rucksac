@@ -12,8 +12,6 @@ package object utils {
 
     import scala.collection.JavaConversions._
 
-    def document[T](node: T, browser: NodeBrowser[T]) = Option(browser.document(node))
-
     def parent[T](node: T, browser: NodeBrowser[T]) = Option(browser.parent(node))
 
     def children[T](node: T, browser: NodeBrowser[T]): mutable.Buffer[_ <: T] =
@@ -30,15 +28,8 @@ package object utils {
         nodes.filter({browser.isText(_)}).map({browser.text(_)})
 
     def matchesAnyParent[T](node: T, browser: NodeBrowser[T], matches: T => Boolean): Boolean = {
-        var result = false
         val parent = browser.parent(node)
-        if (parent != null && parent != browser.document(node)) {
-            result = matches(parent)
-            if (!result) {
-                result = matchesAnyParent(parent, browser, matches)
-            }
-        }
-        result
+        parent != null && (matches(parent) || matchesAnyParent(parent, browser, matches))
     }
 
     def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map {children(_, browser)} getOrElse
