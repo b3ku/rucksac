@@ -13,11 +13,18 @@ package object matchers {
             (browser.name(node) == "input" && attribute(node, browser, "type") == "button"))
     }
 
+    private object neOp extends AttributeOperationMatcher {
+        def apply[T](node: T, browser: NodeBrowser[T], uri: String, name: String, value: String) = {
+            val attrValue = browser.attribute(node, uri, name)
+            attrValue == null || attrValue != value
+        }
+    }
+
     object jQueryMatcherRegistrar extends NodeMatcherRegistrar {
         def registerNodeMatchers(registry: NodeMatcherRegistry) {
             registry.registerPseudoClassMatcher("button", button)
+            registry.registerAttributeOperationMatcher("!=", neOp)
 
-            //TODO !=
             //TODO :eq()
             //TODO :gt()
             //TODO :lt()

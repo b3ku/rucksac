@@ -19,8 +19,10 @@ package object utils {
     def children[T](node: T, browser: NodeBrowser[T]): mutable.Buffer[_ <: T] =
         Option(browser.children(node)).getOrElse(Collections.emptyList())
 
-    def attribute[T](node: T, browser: NodeBrowser[T], uri: String, name: String) =
+    def attribute[T](node: T, browser: NodeBrowser[T], uri: String, name: String): String =
         Option(browser.attribute(node, uri, name)).getOrElse("")
+
+    def attribute[T](node: T, browser: NodeBrowser[T], name: String): String = attribute(node, browser, null, name)
 
     def text[T](node: T, browser: NodeBrowser[T]) = Option(browser.text(node)).getOrElse("")
 

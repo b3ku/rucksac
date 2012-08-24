@@ -23,8 +23,8 @@ case class Query[T](q: String) {
 
     import scala.collection.JavaConversions._
 
-    val selectors               = Parser.parse(Option(q).orElse(Option("")).get)
     val browser: NodeBrowser[T] = new nodeBrowser[T]()()
+    val selectors               = new CssParser(browser).parse(Option(q).orElse(Option("")).get)
 
     def filter(node: T): java.lang.Iterable[T] = this.selectors.filter(node, this.browser)
 

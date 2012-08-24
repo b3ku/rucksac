@@ -50,6 +50,7 @@ final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorTyp
         case "~" =>
             val children = siblings(node, browser)
             children.take(children.indexOf(node)).filter({left(_, browser)}).nonEmpty
+        case s: String => browser.findSelectorCombinatorMatcher(s)(node, browser)
     })
 
     override def toString = left.toString + combinator + right

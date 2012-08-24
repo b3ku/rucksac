@@ -25,12 +25,10 @@ package org.rucksac;
 
 /**
  * @author Andreas Kuhrwahl
- * @since 19.08.12
+ * @since 24.08.12
  */
-public class AttributeOperationNotSupportedException extends NotSupportedException {
+public interface SelectorCombinatorMatcher {
 
-    public AttributeOperationNotSupportedException(String msg) {
-        super(msg);
-    }
+    <T> boolean apply(T node, NodeBrowser<T> browser);
 
 }

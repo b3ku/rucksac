@@ -34,24 +34,75 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
 
     private final Map<String, PseudoClassMatcher> pseudoClasses = new ConcurrentHashMap<String, PseudoClassMatcher>();
+    private final Map<String, PseudoFunctionMatcher> pseudoFunctions =
+            new ConcurrentHashMap<String, PseudoFunctionMatcher>();
+    private final Map<String, AttributeOperationMatcher> attributeOperations =
+            new ConcurrentHashMap<String, AttributeOperationMatcher>();
+    private final Map<String, SelectorCombinatorMatcher> selectorCombinators =
+            new ConcurrentHashMap<String, SelectorCombinatorMatcher>();
 
     public NodeBrowser() {
         init();
     }
 
     @Override
-    public void registerPseudoClassMatcher(String pattern, PseudoClassMatcher pc) {
-        this.pseudoClasses.put(pattern, pc);
+    public void registerPseudoClassMatcher(String pattern, PseudoClassMatcher matcher) {
+        this.pseudoClasses.put(pattern, matcher);
     }
 
     @Override
     public PseudoClassMatcher findPseudoClassMatcher(String name) {
         //TODO patternmatcher
-        PseudoClassMatcher pc = this.pseudoClasses.get(name);
-        if (pc == null) {
+        PseudoClassMatcher matcher = this.pseudoClasses.get(name);
+        if (matcher == null) {
             throw new PseudoClassNotSupportedException(name);
         }
-        return pc;
+        return matcher;
+    }
+
+    @Override
+    public void registerAttributeOperationMatcher(String op, AttributeOperationMatcher matcher) {
+        this.attributeOperations.put(op, matcher);
+    }
+
+    @Override
+    public AttributeOperationMatcher findAttributeOperationMatcher(String op) {
+        return this.attributeOperations.get(op);
+    }
+
+    @Override
+    public String[] getSupportedAttributeOperations() {
+        return this.attributeOperations.keySet().toArray(new String[this.attributeOperations.size()]);
+    }
+
+    @Override
+    public void registerPseudoFunctionMatcher(String pattern, PseudoFunctionMatcher matcher) {
+        this.pseudoFunctions.put(pattern, matcher);
+    }
+
+    @Override
+    public PseudoFunctionMatcher findPseudoFunctionMatcher(String name) {
+        //TODO patternmatcher
+        PseudoFunctionMatcher matcher = this.pseudoFunctions.get(name);
+        if (matcher == null) {
+            throw new PseudoFunctionNotSupportedException(name);
+        }
+        return matcher;
+    }
+
+    @Override
+    public void registerSelectorCombinatorMatcher(String op, SelectorCombinatorMatcher matcher) {
+        this.selectorCombinators.put(op, matcher);
+    }
+
+    @Override
+    public SelectorCombinatorMatcher findSelectorCombinatorMatcher(String op) {
+        return this.selectorCombinators.get(op);
+    }
+
+    @Override
+    public String[] getSupportedSelectorCombinators() {
+        return this.selectorCombinators.keySet().toArray(new String[this.selectorCombinators.size()]);
     }
 
     protected final void applyNodeMatcherRegistrar(NodeMatcherRegistrar registrar) {

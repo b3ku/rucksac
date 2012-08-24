@@ -27,26 +27,8 @@ package org.rucksac;
  * @author Andreas Kuhrwahl
  * @since 24.08.12
  */
-public interface NodeMatcherRegistry {
+public interface PseudoFunctionMatcher {
 
-    void registerPseudoClassMatcher(String pattern, PseudoClassMatcher pc);
-
-    PseudoClassMatcher findPseudoClassMatcher(String name);
-
-    void registerAttributeOperationMatcher(String name, AttributeOperationMatcher op);
-
-    AttributeOperationMatcher findAttributeOperationMatcher(String name);
-
-    String[] getSupportedAttributeOperations();
-
-    void registerPseudoFunctionMatcher(String pattern, PseudoFunctionMatcher pc);
-
-    PseudoFunctionMatcher findPseudoFunctionMatcher(String name);
-
-    void registerSelectorCombinatorMatcher(String name, SelectorCombinatorMatcher op);
-
-    SelectorCombinatorMatcher findSelectorCombinatorMatcher(String name);
-
-    String[] getSupportedSelectorCombinators();
+    <T> boolean apply(T node, NodeBrowser<T> browser, String exp);
 
 }

@@ -4,6 +4,7 @@ import org.junit.Test
 import javax.xml.parsers.DocumentBuilderFactory
 import org.rucksac.parser.css._
 import org.junit.Assert._
+import org.w3c.dom.Element
 
 /**
  * @author Andreas Kuhrwahl
@@ -13,6 +14,7 @@ class jQueryMatchersTest {
 
     val document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument;
     val root     = document.createElement("root")
+    root.setAttribute("class", "oink")
     document.appendChild(root)
 
     //Button
@@ -27,6 +29,24 @@ class jQueryMatchersTest {
     @Test
     def testButton() {
         val result = $(":button").filter(document).iterator()
+        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        assertFalse(result.hasNext)
+    }
+
+    @Test
+    def testNe() {
+        var result = $("[class=oink]").filter(document).iterator()
+        assertEquals("root", result.next().asInstanceOf[Element].getTagName)
+        assertFalse(result.hasNext)
+
+        result = $("[class!=oink]").filter(document).iterator()
+        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        assertFalse(result.hasNext)
+
+        result = $("[class!='']").filter(document).iterator()
+        assertEquals("root", result.next().asInstanceOf[Element].getTagName)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertFalse(result.hasNext)

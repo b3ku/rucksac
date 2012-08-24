@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.rucksac.{NodeBrowser, PseudoFunctionNotSupportedException, AttributeOperationNotSupportedException}
+import org.rucksac.NodeBrowser
 import org.rucksac.utils._
 
 /**
@@ -34,11 +34,11 @@ final class SelectorCondition(sel: Selector) extends Condition {
 
 }
 
-final class AttributeCondition(uri: String, localName: String, value: String, op: String)
-    extends Qualifiable(uri, localName) with Condition {
+final class AttributeCondition(uri: String, name: String, value: String, op: String)
+    extends Qualifiable(uri, name) with Condition {
 
     def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) && {
-        val attrValue = attribute(node, browser, uri, localName)
+        val attrValue = attribute(node, browser, uri, name)
         op match {
             case "#" | "=" => attrValue == value
             case "." | "~=" => attrValue.split(" ") contains value
@@ -47,7 +47,7 @@ final class AttributeCondition(uri: String, localName: String, value: String, op
             case "$=" => attrValue endsWith value
             case "*=" => attrValue contains value
             case null => attrValue != ""
-            case _ => throw new AttributeOperationNotSupportedException(op)
+            case s: String => browser.findAttributeOperationMatcher(s)(node, browser, uri, name, value)
         }
     }
 
@@ -98,6 +98,7 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
         case "nth-last-child" =>
             val children = siblings(node, browser)
             positionMatcher.matches(children.size - children.indexOf(node))
+//        case "nth-of-type" => TODO
         case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
         case "lang" =>
             val matches: (T) => Boolean = {
@@ -106,7 +107,7 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
                     lang == exp || lang.startsWith(exp + "-")
             }
             (browser.isElement(node) && matches(node)) || matchesAnyParent(node, browser, matches)
-        case _ => throw new PseudoFunctionNotSupportedException(name)
+        case s: String => browser.findPseudoFunctionMatcher(s)(node, browser, exp)
     }
 
     override def toString = ":" + name + "(" + exp + ")"

@@ -4,6 +4,9 @@ import util.parsing.combinator.lexical.Lexical
 import util.parsing.combinator.token.StdTokens
 import util.parsing.combinator.RegexParsers
 import scala.util.parsing.input.CharArrayReader.EofCh
+import org.rucksac.NodeMatcherRegistry
+import collection.immutable.Set
+import util.Sorting
 
 /**
  * @author Andreas Kuhrwahl
@@ -20,10 +23,15 @@ trait CssTokens extends StdTokens {
 
 }
 
-class Lexer extends Lexical with RegexParsers with CssTokens {
+class Lexer(registry: NodeMatcherRegistry) extends Lexical with RegexParsers with CssTokens {
 
     override type Elem = Char
     override val whiteSpace = """(\/\*[^*]*\*+([^/*][^*]*\*+)*\/)*""".r
+
+    private val keywords =
+        Set[String](":not(", ",", ">", "+", "-", "#", ".", ":", "(", ")", "[", "]", "=", "~=", "^=", "$=", "*=", "|=",
+            "|", "*", "~") ++ Set(registry.getSupportedAttributeOperations: _*) ++
+            Set(registry.getSupportedSelectorCombinators: _*)
 
     def whitespace = this.whiteSpace
 
@@ -49,8 +57,17 @@ class Lexer extends Lexical with RegexParsers with CssTokens {
         | EofCh ^^^ EOF
         | '\'' ~> failure("unclosed string literal")
         | '\"' ~> failure("unclosed string literal")
-        | (":not(" | "," | ">" | "+" | "-" | "#" | "." | ":" | "(" | ")" | "[" | "]" | "=" | "~=" | "^=" | "$=" | "*=" |
-        "|=" | "|" | "*" | "~") ^^ Keyword
+        | keyword
         | failure("illegal character"))
+
+    private val keyword: Parser[Token] = {
+
+        def parseKeyword(s: String): Parser[Token] = accept(s.toList) ^^ {_ => Keyword(s)}
+
+        val k = new Array[String](keywords.size)
+        keywords.copyToArray(k, 0)
+        Sorting.quickSort(k)
+        (k.toList map parseKeyword).foldRight(failure("no matching keyword"): Parser[Token])((x, y) => y | x)
+    }
 
 }

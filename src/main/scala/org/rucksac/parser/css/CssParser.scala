@@ -2,7 +2,7 @@ package org.rucksac.parser.css
 
 import util.parsing.combinator.syntactical.StdTokenParsers
 import org.rucksac.parser._
-import org.rucksac.{ParseException, NodeBrowser}
+import org.rucksac.{NodeMatcherRegistry, ParseException, NodeBrowser}
 import collection.mutable.ListBuffer
 
 /**
@@ -14,18 +14,29 @@ import collection.mutable.ListBuffer
  * @since 13.05.12
  */
 
-object Parser extends StdTokenParsers {
+class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
     type Tokens = Lexer
-    val lexical = new Tokens
+    val lexical = new Tokens(registry)
 
     private case class NextSelector(combinator: CombinatorType, selector: Selector)
 
     // Helpers
     private def selector_sequence(sel: Selector, list: List[NextSelector]) =
         (sel /: list)((s, next) => new SelectorCombinatorSelector(s, next.combinator, next.selector))
+
     private def condition_combinator(conditions: List[Condition]) =
         (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
+
+    private def attribute_operations = {
+        val ops: Iterable[String] = List("~=", "^=", "$=", "*=", "|=") ++ registry.getSupportedAttributeOperations
+        (keyword("=") /: ops)((x, y) => y | x)
+    }
+
+    private def combinators = {
+        val ops: Iterable[String] = List(">", "~") ++ registry.getSupportedSelectorCombinators
+        (keyword("+") /: ops)((x, y) => y | x)
+    }
 
     // Grammar
     protected def s = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -40,7 +51,7 @@ object Parser extends StdTokenParsers {
         case seq ~ list => selector_sequence(seq, list)
     }
 
-    def combinator = ((opt(s) ~> ("+" | ">" | "~") <~ opt(s)) | s) ^^ CombinatorType
+    def combinator = ((opt(s) ~> combinators <~ opt(s)) | s) ^^ CombinatorType
 
     def simple_selector_sequence = (type_selector | universal) ~ rep(condition) ^^ {
         case sel ~ conditions => conditions.size match {
@@ -80,7 +91,7 @@ object Parser extends StdTokenParsers {
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
-    protected def attribute_operation = ("=" | "~=" | "^=" | "$=" | "*=" | "|=") <~ opt(s)
+    protected def attribute_operation = attribute_operations <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
     def negation = ":not(" ~> opt(s) ~> negation_arg <~ opt(s) <~ ")" ^^ {new NegativeCondition(_)}
