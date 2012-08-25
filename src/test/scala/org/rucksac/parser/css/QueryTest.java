@@ -292,7 +292,7 @@ public class QueryTest {
         assertNext("baz", "second", result);
         assertFalse(result.hasNext());
 
-        result = filter("foo > *:nth-of-type(-n+2)");
+        result = filter("foo > *:nth-of-type(-n+2  )");
         assertNext("bar", "b1", result);
         assertNext("bar", "b2", result);
         assertNext("baz", "first", result);
@@ -303,7 +303,7 @@ public class QueryTest {
 
     @Test
     public void testElementIsNthLastOfType() {
-        Iterator<Node> result = filter("baz:nth-last-of-type(2)");
+        Iterator<Node> result = filter("baz:nth-last-of-type(  2 )");
         assertNext("baz", "second", result);
         assertFalse(result.hasNext());
 

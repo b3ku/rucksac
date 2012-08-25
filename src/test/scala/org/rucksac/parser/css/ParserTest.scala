@@ -190,13 +190,13 @@ class ParserTest {
     @Test
     def testParseCss23() {
         val result = Parser().parse("html|tr:nth-child(-n+6)")
-        Assert.assertEquals("html|tr:nth-child(-n + 6)", result.toString)
+        Assert.assertEquals("html|tr:nth-child(-n+6)", result.toString)
     }
 
     @Test
     def testParseCss24() {
-        val result = Parser().parse(":nth-child( +3n - 2 )")
-        Assert.assertEquals("*|*:nth-child(+ 3n - 2)", result.toString)
+        val result = Parser().parse(":nth-child( +3n  - 2 )")
+        Assert.assertEquals("*|*:nth-child(+3n-2)", result.toString)
     }
 
     @Test
@@ -213,8 +213,8 @@ class ParserTest {
 
     @Test
     def testParseCss27() {
-        val result = Parser().parse("a#id.class.clazz:hidden[rel=foo]")
-        Assert.assertEquals("*|a#id.class.clazz:hidden[*|rel=foo]", result.toString)
+        val result = Parser().parse("a#id.class.clazz:hidden[rel=foo]  .span")
+        Assert.assertEquals("*|a#id.class.clazz:hidden[*|rel=foo] *|*.span", result.toString)
     }
 
 }
