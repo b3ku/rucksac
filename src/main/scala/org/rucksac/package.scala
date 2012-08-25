@@ -85,5 +85,9 @@ package object matchers {
         }
     }
 
+    def all(registry: NodeMatcherRegistry) = {
+        jQueryMatcherRegistrar.registerNodeMatchers(registry)
+    }
+
 }
 

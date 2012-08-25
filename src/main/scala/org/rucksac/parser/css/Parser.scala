@@ -14,7 +14,7 @@ import collection.mutable.ListBuffer
  * @since 13.05.12
  */
 
-class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
+class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
     type Tokens = Lexer
     val lexical = new Tokens(registry)
@@ -24,15 +24,8 @@ class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     // Helpers
     private def selector_sequence(sel: Selector, list: List[NextSelector]) =
         (sel /: list)((s, next) => new SelectorCombinatorSelector(s, next.combinator, next.selector))
-
     private def condition_combinator(conditions: List[Condition]) =
         (conditions.head /: conditions.tail)(new CombinatorCondition(_, _))
-
-    private def attribute_operations =
-        (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /: registry.getSupportedAttributeOperations)((ops, op) => op | ops)
-
-    private def combinators =
-        ((">" | "+" | "~") /: registry.getSupportedSelectorCombinators)((ops, op) => op | ops)
 
     // Grammar
     protected def s = elem("whitespace", _.isInstanceOf[lexical.WhiteSpace]) ^^ {_ => " "}
@@ -47,6 +40,8 @@ class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
         case seq ~ list => selector_sequence(seq, list)
     }
 
+    private val combinators = (("+" | ">" | "~") /: registry.getSupportedSelectorCombinators)(
+        (combs, comb) => comb | combs)
     def combinator = ((opt(s) ~> combinators <~ opt(s)) | s) ^^ CombinatorType
 
     def simple_selector_sequence = (type_selector | universal) ~ rep(condition) ^^ {
@@ -87,6 +82,8 @@ class CssParser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     }
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
+    private val attribute_operations = (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /:
+        registry.getSupportedAttributeOperations)((ops, op) => op | ops)
     protected def attribute_operation = attribute_operations <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
@@ -122,12 +119,8 @@ class SelectorList(selectors: List[Selector]) {
     def filter[T](node: T, browser: NodeBrowser[T]) = {
         val matches = new ListBuffer[T]
         def applySelector(node: T, sel: Selector) {
-            if (sel(node, browser)) {
-                matches += node
-            }
-            if (browser.isElement(node)) {
-                browser.children(node).foreach({n => applySelector(n, sel)})
-            }
+            if (sel(node, browser)) matches += node
+            if (browser.isElement(node)) browser.children(node).foreach({n => applySelector(n, sel)})
         }
         selectors.foreach({s => applySelector(node, s)})
         matches

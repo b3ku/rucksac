@@ -44,10 +44,6 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     private final Map<String, SelectorCombinatorMatcher> selectorCombinators =
             new ConcurrentHashMap<String, SelectorCombinatorMatcher>();
 
-    public NodeBrowser() {
-        init();
-    }
-
     @Override
     public void registerPseudoClassMatcher(String pattern, PseudoClassMatcher matcher) {
         this.pseudoClasses.put(pattern, matcher);
@@ -106,13 +102,6 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     @Override
     public String[] getSupportedSelectorCombinators() {
         return this.selectorCombinators.keySet().toArray(new String[this.selectorCombinators.size()]);
-    }
-
-    protected final void applyNodeMatcherRegistrar(NodeMatcherRegistrar registrar) {
-        registrar.registerNodeMatchers(this);
-    }
-
-    protected void init() {
     }
 
     /**

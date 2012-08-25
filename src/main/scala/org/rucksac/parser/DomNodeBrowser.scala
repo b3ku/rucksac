@@ -12,6 +12,8 @@ class DomNodeBrowser extends NodeBrowser[Node] {
 
     import scala.collection.JavaConversions._
 
+    all(this);
+
     def parent(node: Node) = node.getParentNode match {
         case el: Element => el
         case _ => null // Document
@@ -50,10 +52,6 @@ class DomNodeBrowser extends NodeBrowser[Node] {
             if (attr == null) null else attr.getValue
         }
         case _ => throw new IllegalArgumentException(node.toString)
-    }
-
-    protected override def init() {
-        applyNodeMatcherRegistrar(jQueryMatcherRegistrar)
     }
 
 }

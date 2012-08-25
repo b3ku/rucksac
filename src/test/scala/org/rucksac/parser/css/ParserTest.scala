@@ -12,7 +12,7 @@ import org.rucksac.ParseException
 class ParserTest {
 
     object Parser {
-        def apply() = new CssParser(new DomNodeBrowser)
+        def apply() = new Parser(new DomNodeBrowser)
     }
 
     @Test(expected = classOf[ParseException])
