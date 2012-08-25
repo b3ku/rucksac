@@ -25,20 +25,17 @@ package org.rucksac.parser.css;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.util.Iterator;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.rucksac.ParseException;
 import org.rucksac.PseudoClassNotSupportedException;
 import org.rucksac.PseudoFunctionNotSupportedException;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -55,113 +52,105 @@ public class QueryTest {
         return new Query<Node>(query).filter(this.document.getDocumentElement()).iterator();
     }
 
-    private Element createElement(String name, String id, String styleClass, Attr attr) {
-        Element result = this.document.createElement(name);
-        if (id != null) {
-            result.getAttributes().setNamedItem(createAttribute("id", id));
-        }
-        if (styleClass != null) {
-            result.getAttributes().setNamedItem(createAttribute("class", styleClass));
-        }
-        if (attr != null) {
-            result.getAttributes().setNamedItem(attr);
-        }
-        return result;
-
-    }
-
-    private Attr createAttribute(String name, String value) {
-        Attr attribute = this.document.createAttribute(name);
-        attribute.setValue(value);
-        return attribute;
-    }
-
     @Before
     public void setup() throws Exception {
-        this.document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-        Element root = createElement("foo", "myFoo", null, null);
-        root.appendChild(createElement("bar", null, "baz bum", createAttribute("name", "bam")));
-        Element lastBar = createElement("bar", null, "last", createAttribute("name", "bim bam"));
-        lastBar.appendChild(this.document.createTextNode("Hello World"));
-        root.appendChild(lastBar);
-        Element baz = createElement("baz", null, "fazHolder", createAttribute("name", "bim-bam-bum"));
-        baz.getAttributes().setNamedItem(createAttribute("disabled", "disabled"));
-        baz.getAttributes().setNamedItem(createAttribute("checked", "checked"));
-        baz.getAttributes().setNamedItem(createAttribute("dummy", ""));
-        baz.appendChild(createElement("faz", null, null, createAttribute("lang", "en-us")));
-        root.appendChild(baz);
-        this.document.appendChild(root);
+        String documentAsText = ""
+                + "<foo id='myFoo'>"
+                + "  <bar id='b1' class='baz bum' name='bam' />"
+                + "  <bar id='b2' class='last' name='bim bam'>Hello World</bar>"
+                + "  <baz id='first' class='fazHolder' name='bim-bam-bum' disabled='disabled' checked='checked' dummy=''>"
+                + "    <faz lang='en-us' />"
+                + "  </baz>"
+                + "  <wombat id='only' />"
+                + "  <baz id='second' />"
+                + "  <baz id='third' />"
+                + "</foo>";
+
+        this.document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
+                new ByteArrayInputStream(documentAsText.getBytes("UTF-8")));
     }
 
-    void assertEquals(String expected, Node node) {
+    private void assertNext(String expectedName, Iterator<Node> result) {
+        assertNext(expectedName, null, result);
+    }
+
+    private void assertNext(String expectedName, String expectedId, Iterator<Node> result) {
+        assertTrue(result.hasNext());
+        Node node = result.next();
         assertTrue(node instanceof Element);
         Element e = (Element) node;
-        Assert.assertEquals(expected, e.getTagName());
+        Assert.assertEquals(expectedName, e.getTagName());
+        if (expectedId != null) {
+            Assert.assertEquals(expectedId, e.getAttribute("id"));
+        }
     }
 
     @Test
     public void testAnyElement() {
         Iterator<Node> result = filter("*");
-        assertEquals("foo", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
-        assertEquals("faz", result.next());
+        assertNext("foo", result);
+        assertNext("bar", result);
+        assertNext("bar", result);
+        assertNext("baz", result);
+        assertNext("faz", result);
+        assertNext("wombat", result);
+        assertNext("baz", result);
+        assertNext("baz", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementOfType() {
         Iterator<Node> result = filter("bar");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", result);
+        assertNext("bar", result);
         assertFalse(result.hasNext());
 
         result = filter("foo");
-        assertEquals("foo", result.next());
+        assertNext("foo", result);
         assertFalse(result.hasNext());
 
         result = filter("foo, bar");
-        assertEquals("foo", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("foo", result);
+        assertNext("bar", result);
+        assertNext("bar", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementWithAttribute() {
         Iterator<Node> result = filter("bar[name]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("*[name]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("[dummy]");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementWithAttributeValue() {
         Iterator<Node> result = filter("bar[name=bam]");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIncludesOneAttributeValue() {
         Iterator<Node> result = filter("[name~=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("[name~=bim]");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("[name~=bi]");
@@ -171,55 +160,55 @@ public class QueryTest {
     @Test
     public void testElementStartsWithAttributeValue() {
         Iterator<Node> result = filter("[name^=bim]");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("[name^=b]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementEndsWithAttributeValue() {
         Iterator<Node> result = filter("[name$=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("[name$=m]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementContainsAttributeValue() {
         Iterator<Node> result = filter("[name*=bi]");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("[name*=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("[name*=am]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementStartsWithHyphenatedAttributeValue() {
         Iterator<Node> result = filter("[name|=bim]");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("[name|=bum]");
@@ -229,7 +218,7 @@ public class QueryTest {
     @Test
     public void testElementIsRoot() {
         Iterator<Node> result = filter(":root");
-        assertEquals("foo", result.next());
+        assertNext("foo", result);
         assertFalse(result.hasNext());
 
         result = filter("bar:root");
@@ -239,71 +228,121 @@ public class QueryTest {
     @Test
     public void testElementIsNthChild() {
         Iterator<Node> result = filter("#myFoo > :nth-child(3)");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-child('odd')");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("baz", "first", result);
+        assertNext("baz", "second", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-child(2n)");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("wombat", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-child(-n+2)");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsNthLastChild() {
         Iterator<Node> result = filter("#myFoo > :nth-last-child(3)");
-        assertEquals("bar", result.next());
+        assertNext("wombat", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-last-child('odd')");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("wombat", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-last-child(2n)");
-        assertEquals("bar", result.next());
+        assertNext("bar", result);
+        assertNext("baz", result);
+        assertNext("baz", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :nth-last-child(-n+2)");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("baz", result);
+        assertNext("baz", result);
         assertFalse(result.hasNext());
     }
 
     @Test
-    @Ignore
     public void testElementIsNthOfType() {
-        fail();
+        Iterator<Node> result = filter("baz:nth-of-type(2)");
+        assertNext("baz", "second", result);
+        assertFalse(result.hasNext());
+
+        result = filter("baz:nth-of-type(odd)");
+        assertNext("baz", "first", result);
+        assertNext("baz", "third", result);
+        assertFalse(result.hasNext());
+
+        result = filter("wombat:nth-of-type(2)");
+        assertFalse(result.hasNext());
+
+        result = filter("*:nth-of-type(2n)");
+        assertNext("bar", "b2", result);
+        assertNext("baz", "second", result);
+        assertFalse(result.hasNext());
+
+        result = filter("foo > *:nth-of-type(-n+2)");
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
+        assertNext("wombat", result);
+        assertNext("baz", "second", result);
+        assertFalse(result.hasNext());
     }
 
     @Test
-    @Ignore
     public void testElementIsNthLastOfType() {
-        fail();
+        Iterator<Node> result = filter("baz:nth-last-of-type(2)");
+        assertNext("baz", "second", result);
+        assertFalse(result.hasNext());
+
+        result = filter("baz:nth-last-of-type(odd)");
+        assertNext("baz", "first", result);
+        assertNext("baz", "third", result);
+        assertFalse(result.hasNext());
+
+        result = filter("wombat:nth-last-of-type(2)");
+        assertFalse(result.hasNext());
+
+        result = filter("*:nth-last-of-type(2n)");
+        assertNext("bar", "b1", result);
+        assertNext("baz", "second", result);
+        assertFalse(result.hasNext());
+
+        result = filter("foo > *:nth-last-of-type(-n+2)");
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("wombat", result);
+        assertNext("baz", "second", result);
+        assertNext("baz", "third", result);
+        assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsFirstChild() {
         Iterator<Node> result = filter("bar:first-child");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.baz:first-child");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter(":first-child");
-        assertEquals("foo", result.next());
-        assertEquals("bar", result.next());
-        assertEquals("faz", result.next());
+        assertNext("foo", result);
+        assertNext("bar", "b1", result);
+        assertNext("faz", result);
         assertFalse(result.hasNext());
     }
 
@@ -313,42 +352,40 @@ public class QueryTest {
         assertFalse(result.hasNext());
 
         result = filter("baz:last-child");
-        assertEquals("baz", result.next());
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsFirstOfType() {
         Iterator<Node> result = filter("#myFoo > :first-of-type");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("baz", "first", result);
+        assertNext("wombat", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > bar:first-of-type");
-        Element element = (Element) result.next();
-        Assert.assertEquals("bar", element.getTagName());
-        Assert.assertEquals("bam", element.getAttribute("name"));
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsLastOfType() {
         Iterator<Node> result = filter("#myFoo > :last-of-type");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("wombat", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > bar:last-of-type");
-        Element element = (Element) result.next();
-        Assert.assertEquals("bar", element.getTagName());
-        Assert.assertEquals("bim bam", element.getAttribute("name"));
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsOnlyChild() {
         Iterator<Node> result = filter("faz:only-child");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
 
         result = filter("* > bar:only-child");
@@ -360,24 +397,27 @@ public class QueryTest {
         Iterator<Node> result = filter("bar:only-of-type");
         assertFalse(result.hasNext());
 
-        result = filter("#myFoo > baz:only-of-type");
-        assertEquals("baz", result.next());
+        result = filter("#myFoo > wombat:only-of-type");
+        assertNext("wombat", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementWithNoChildren() {
         Iterator<Node> result = filter(":empty");
-        assertEquals("bar", result.next());
-        assertEquals("faz", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("faz", result);
+        assertNext("wombat", result);
+        assertNext("baz", "second", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
 
         result = filter(".fazHolder > faz:empty");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
 
         result = filter(".fazHolder > :empty");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
     }
 
@@ -414,26 +454,29 @@ public class QueryTest {
     @Test
     public void testElementIsInLanguage() {
         Iterator<Node> result = filter(":lang(en)");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsEnabledOrDisabled() {
         Iterator<Node> result = filter("#myFoo > :disabled");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > :enabled");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
+        assertNext("wombat", result);
+        assertNext("baz", "second", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsChecked() {
         Iterator<Node> result = filter("#myFoo > :checked");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
@@ -445,11 +488,11 @@ public class QueryTest {
     @Test
     public void testElementContainsText() {
         Iterator<Node> result = filter(":contains('Hello')");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter(":contains('World')");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter(":contains('World!')");
@@ -484,22 +527,22 @@ public class QueryTest {
     @Test
     public void testElementWithClass() {
         Iterator<Node> result = filter(".baz");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.baz.bum[name]");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter(".bam");
         assertFalse(result.hasNext());
 
         result = filter("bar.baz");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.bum");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
         assertFalse(result.hasNext());
 
         result = filter("foo.baz");
@@ -509,11 +552,11 @@ public class QueryTest {
     @Test
     public void testElementWithId() {
         Iterator<Node> result = filter("#myFoo");
-        assertEquals("foo", result.next());
+        assertNext("foo", result);
         assertFalse(result.hasNext());
 
         result = filter("foo#myFoo");
-        assertEquals("foo", result.next());
+        assertNext("foo", result);
         assertFalse(result.hasNext());
 
         result = filter("bar#myFoo");
@@ -523,47 +566,47 @@ public class QueryTest {
     @Test
     public void testElementNegation() {
         Iterator<Node> result = filter("#myFoo > *[name*=bam]:not(baz)");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", result);
+        assertNext("bar", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > *[name*=bam]:not([name~=bam])");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > *[name*=bam]:not(:enabled)");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsDescendant() {
         Iterator<Node> result = filter("#myFoo [name~=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo faz");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo .fazHolder[name] faz");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
     }
 
     @Test
     public void testElementIsChild() {
         Iterator<Node> result = filter("#myFoo > [name~=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("bar", result.next());
+        assertNext("bar", "b1", result);
+        assertNext("bar", "b2", result);
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > faz");
         assertFalse(result.hasNext());
 
         result = filter("#myFoo > .fazHolder[name] > faz");
-        assertEquals("faz", result.next());
+        assertNext("faz", result);
         assertFalse(result.hasNext());
     }
 
@@ -573,15 +616,19 @@ public class QueryTest {
         assertFalse(result.hasNext());
 
         result = filter("bar.last + baz");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.last + .fazHolder");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.bum + [name~=bam]");
-        assertEquals("bar", result.next());
+        assertNext("bar", "b2", result);
+        assertFalse(result.hasNext());
+
+        result = filter("baz + baz");
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
     }
 
@@ -591,12 +638,14 @@ public class QueryTest {
         assertFalse(result.hasNext());
 
         result = filter("bar.baz ~ baz");
-        assertEquals("baz", result.next());
+        assertNext("baz", "first", result);
+        assertNext("baz", "second", result);
+        assertNext("baz", "third", result);
         assertFalse(result.hasNext());
 
         result = filter("bar.bum ~ [name*=bam]");
-        assertEquals("bar", result.next());
-        assertEquals("baz", result.next());
+        assertNext("bar", "b2", result);
+        assertNext("baz", "first", result);
         assertFalse(result.hasNext());
     }
 

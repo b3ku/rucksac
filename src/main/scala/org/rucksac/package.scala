@@ -34,8 +34,8 @@ package object utils {
         parent != null && (matches(parent) || matchesAnyParent(parent, browser, matches))
     }
 
-    def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map {children(_, browser)} getOrElse
-        (List(node))
+    def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map
+        { children(_, browser).filter(browser.isElement(_)) } getOrElse (List(node))
 
 }
 

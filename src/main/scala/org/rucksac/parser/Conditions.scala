@@ -98,7 +98,16 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
         case "nth-last-child" =>
             val children = siblings(node, browser)
             positionMatcher.matches(children.size - children.indexOf(node))
-//        case "nth-of-type" => TODO
+        case "nth-of-type" =>
+            val expName = (browser.name(node), browser.namespaceUri(node))
+            val children = siblings(node, browser).filter(el =>
+                browser.isElement(el) && (browser.name(el) , browser.namespaceUri(el)) == expName)
+            positionMatcher.matches(children.indexOf(node) + 1)
+        case "nth-last-of-type" =>
+            val expName = (browser.name(node), browser.namespaceUri(node))
+            val children = siblings(node, browser).filter(el =>
+                browser.isElement(el) && (browser.name(el) , browser.namespaceUri(el)) == expName)
+            positionMatcher.matches(children.size - children.indexOf(node))
         case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
         case "lang" =>
             val matches: (T) => Boolean = {
