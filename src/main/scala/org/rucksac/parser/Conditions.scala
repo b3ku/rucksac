@@ -93,31 +93,37 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
 
     lazy val positionMatcher = NthParser.parse(exp)
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = name match {
-        case "nth-child" => positionMatcher.matches(siblings(node, browser).indexOf(node) + 1)
-        case "nth-last-child" =>
-            val children = siblings(node, browser)
-            positionMatcher.matches(children.size - children.indexOf(node))
-        case "nth-of-type" =>
+    def apply[T](node: T, browser: NodeBrowser[T]) = {
+
+        def siblingsOfType() = {
             val expName = (browser.name(node), browser.namespaceUri(node))
-            val children = siblings(node, browser).filter(el =>
-                browser.isElement(el) && (browser.name(el) , browser.namespaceUri(el)) == expName)
-            positionMatcher.matches(children.indexOf(node) + 1)
-        case "nth-last-of-type" =>
-            val expName = (browser.name(node), browser.namespaceUri(node))
-            val children = siblings(node, browser).filter(el =>
-                browser.isElement(el) && (browser.name(el) , browser.namespaceUri(el)) == expName)
-            positionMatcher.matches(children.size - children.indexOf(node))
-        case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
-        case "lang" =>
-            val matches: (T) => Boolean = {
-                p: T =>
-                    val lang: String = attribute(p, browser, "lang")
-                    lang == exp || lang.startsWith(exp + "-")
-            }
-            (browser.isElement(node) && matches(node)) || matchesAnyParent(node, browser, matches)
-        case s: String => browser.findPseudoFunctionMatcher(s)(node, browser, exp)
+            siblings(node, browser).filter(el =>
+                browser.isElement(el) && (browser.name(el), browser.namespaceUri(el)) == expName)
+        }
+
+        name match {
+            case "nth-child" => positionMatcher.matches(siblings(node, browser).indexOf(node) + 1)
+            case "nth-last-child" =>
+                val children = siblings(node, browser)
+                positionMatcher.matches(children.size - children.indexOf(node))
+            case "nth-of-type" =>
+                val siblings = siblingsOfType
+                positionMatcher.matches(siblings.indexOf(node) + 1)
+            case "nth-last-of-type" =>
+                val siblings = siblingsOfType
+                positionMatcher.matches(siblings.size - siblings.indexOf(node))
+            case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
+            case "lang" =>
+                val matches: (T) => Boolean = {
+                    p: T =>
+                        val lang: String = attribute(p, browser, "lang")
+                        lang == exp || lang.startsWith(exp + "-")
+                }
+                (browser.isElement(node) && matches(node)) || matchesAnyParent(node, browser, matches)
+            case s: String => browser.findPseudoFunctionMatcher(s)(node, browser, exp)
+        }
     }
+
 
     override def toString = ":" + name + "(" + exp + ")"
 }
