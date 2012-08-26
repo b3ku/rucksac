@@ -37,7 +37,7 @@ class DomNodeBrowser extends NodeBrowser[Node] {
     }
 
     def name(node: Node) = node match {
-        case e: Element => if (e.getLocalName != null) e.getLocalName else e.getTagName
+        case e: Element => if (e.getLocalName == null) e.getTagName else e.getLocalName
         case _ => throw new IllegalArgumentException(node.toString)
     }
 
