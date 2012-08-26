@@ -111,13 +111,13 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     public abstract T parent(T node);
 
     /**
-     * Must be invoked on element nodes only.
+     * Get the children of an element node. Must be invoked on element nodes only.
      *
-     * @return the child nodes of <code>node</code>
+     * @return the child nodes of <code>node</code>, an empty list if there are no children
      * @throws IllegalArgumentException when invoked on a non-element node
      * @see #isElement(Object)
      */
-    public abstract List<? extends T> children(T node);
+    public abstract List<T> children(T node);
 
     /**
      * @return <code>true</code> of <code>node</code> is an element
@@ -130,16 +130,16 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     public abstract boolean isText(T node);
 
     /**
-     * Must be invoked on text nodes only.
+     * Get the text content of a text node. Must be invoked on text nodes only.
      *
-     * @return the text contents of given text <code>node</code>
+     * @return the text content of given text <code>node</code>
      * @throws IllegalArgumentException when invoked on a non-text node
      * @see #isText(Object)
      */
     public abstract String text(T node);
 
     /**
-     * Must be invoked on element nodes only.
+     * Get the local name of an element node. Must be invoked on element nodes only.
      *
      * @return the local name for the given element <code>node</code>
      * @throws IllegalArgumentException when invoked on a non-element node
@@ -148,7 +148,7 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     public abstract String name(T node);
 
     /**
-     * Must be invoked on element nodes only.
+     * Get the namespace URI of an element node. Must be invoked on element nodes only.
      *
      * @return the namespace uri for the given element <code>node</code>
      * @throws IllegalArgumentException when invoked on a non-element node
@@ -157,7 +157,7 @@ public abstract class NodeBrowser<T> implements NodeMatcherRegistry {
     public abstract String namespaceUri(T node);
 
     /**
-     * Must be invoked on element nodes only.
+     * Get an attribute volue. Must be invoked on element nodes only.
      *
      * @return the attribute value for the attribute <code>name</code> having the namespace uri <code>uri</code> of the
      *         given element <code>node</code> or <code>null</code> if there is no such attribute

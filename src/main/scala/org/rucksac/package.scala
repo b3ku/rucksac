@@ -10,12 +10,12 @@ import java.util.Collections
 
 package object utils {
 
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
 
     def parent[T](node: T, browser: NodeBrowser[T]) = Option(browser.parent(node))
 
-    def children[T](node: T, browser: NodeBrowser[T]): mutable.Buffer[_ <: T] =
-        Option(browser.children(node)).getOrElse(Collections.emptyList())
+    def children[T](node: T, browser: NodeBrowser[T]): List[T] =
+        if (browser.isElement(node)) browser.children(node).asScala.toList else List[T]()
 
     def attribute[T](node: T, browser: NodeBrowser[T], uri: String, name: String): String =
         Option(browser.attribute(node, uri, name)).getOrElse("")
@@ -27,7 +27,7 @@ package object utils {
     def namespaceUri[T](node: T, browser: NodeBrowser[T]) = Option(browser.namespaceUri(node)).getOrElse("")
 
     def textNodes[T](nodes: Iterable[T], browser: NodeBrowser[T]): Iterable[String] =
-        nodes.filter({browser.isText(_)}).map({browser.text(_)})
+        nodes filter {browser.isText(_)}  map {browser.text(_)}
 
     def matchesAnyParent[T](node: T, browser: NodeBrowser[T], matches: T => Boolean): Boolean = {
         val parent = browser.parent(node)
@@ -35,7 +35,7 @@ package object utils {
     }
 
     def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map
-        { children(_, browser).filter(browser.isElement(_)) } getOrElse (List(node))
+        { children(_, browser) filter {browser.isElement(_)} } getOrElse (List(node))
 
     def siblingsOfSameType[T](node: T, browser: NodeBrowser[T]) = {
         val expName = (browser.name(node), browser.namespaceUri(node))
@@ -49,9 +49,20 @@ package object matchers {
 
     import utils._
 
-    private object button extends PseudoClassMatcher {
-        def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) && (browser.name(node) == "button" ||
+    private object buttonClass extends PseudoClassMatcher {
+        def apply[T](node: T, nodes: java.util.List[T], browser: NodeBrowser[T]) =
+            browser.isElement(node) && (browser.name(node) == "button" ||
             (browser.name(node) == "input" && attribute(node, browser, "type") == "button"))
+    }
+
+    private object eqFunc extends PseudoFunctionMatcher {
+        def apply[T](node: T, nodes: java.util.List[T], browser: NodeBrowser[T], exp: String) = {
+            try {
+                nodes.get(exp.toInt - 1) == node
+            } catch {
+                case _: NumberFormatException | _: IndexOutOfBoundsException => false // TODO logging?
+            }
+        }
     }
 
     private object neOp extends AttributeOperationMatcher {
@@ -63,10 +74,10 @@ package object matchers {
 
     object jQueryMatcherRegistrar extends NodeMatcherRegistrar {
         def registerNodeMatchers(registry: NodeMatcherRegistry) {
-            registry.registerPseudoClassMatcher("button", button)
+            registry.registerPseudoClassMatcher("button", buttonClass)
+            registry.registerPseudoFunctionMatcher("eq", eqFunc)
             registry.registerAttributeOperationMatcher("!=", neOp)
 
-            //TODO :eq()
             //TODO :gt()
             //TODO :lt()
             //TODO :even

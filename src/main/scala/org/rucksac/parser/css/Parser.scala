@@ -3,7 +3,7 @@ package org.rucksac.parser.css
 import util.parsing.combinator.syntactical.StdTokenParsers
 import org.rucksac.parser._
 import org.rucksac.{NodeMatcherRegistry, ParseException, NodeBrowser}
-import collection.mutable.ListBuffer
+import org.rucksac.utils._
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -117,13 +117,13 @@ class SelectorList(selectors: List[Selector]) {
     import scala.collection.JavaConversions._
 
     def filter[T](node: T, browser: NodeBrowser[T]) = {
-        val matches = new ListBuffer[T]
-        def applySelector(node: T, sel: Selector) {
-            if (sel(node, browser)) matches += node
-            if (browser.isElement(node)) browser.children(node).foreach({n => applySelector(n, sel)})
-        }
-        selectors.foreach({s => applySelector(node, s)})
-        matches
+
+        def allNodes(node: T): List[T] =
+            (List(node) /: children(node, browser))((matches, child) => matches ::: allNodes(child))
+
+        val nodes = allNodes(node)
+        val selectorMatches = (List[T]() /: selectors)((matches, selector) => matches ::: selector(nodes, browser))
+        nodes intersect selectorMatches // return each matching node only once and in the correct order
     }
 
     override def toString = selectors mkString ", "

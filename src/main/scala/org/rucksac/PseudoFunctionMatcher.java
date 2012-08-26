@@ -23,12 +23,14 @@
  */
 package org.rucksac;
 
+import java.util.List;
+
 /**
  * @author Andreas Kuhrwahl
  * @since 24.08.12
  */
 public interface PseudoFunctionMatcher {
 
-    <T> boolean apply(T node, NodeBrowser<T> browser, String exp);
+    <T> boolean apply(T node, List<T> nodes, NodeBrowser<T> browser, String exp);
 
 }

@@ -11,7 +11,7 @@ import org.junit.Assert._
  */
 class jQueryMatchersTest {
 
-    val document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument;
+    val document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
     val root     = document.createElement("root")
     root.setAttribute("class", "oink")
     document.appendChild(root)
@@ -48,6 +48,30 @@ class jQueryMatchersTest {
         assertEquals("root", result.next().getTagName)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
         assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        assertFalse(result.hasNext)
+    }
+
+    @Test
+    def testEq() {
+        var result = Query(":eq(1)").filter(root).iterator()
+        assertEquals("root", result.next().getTagName)
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(2)").filter(root).iterator()
+        assertEquals("button", result.next().getTagName)
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(3)").filter(root).iterator()
+        assertEquals("input", result.next().getTagName)
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(0)").filter(root).iterator()
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(5)").filter(root).iterator()
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(foo)").filter(root).iterator()
         assertFalse(result.hasNext)
     }
 
