@@ -23,7 +23,7 @@ trait SimpleSelector extends Selector
 
 final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Selector {
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = sel(node, browser) && con(node, browser)
+    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = con(sel(nodes, browser), browser)
 
     override def toString = sel.toString + con.toString
 
@@ -31,8 +31,11 @@ final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Sel
 
 class ElementSelector(uri: String, tagName: String) extends Qualifiable(uri, tagName) with SimpleSelector {
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = browser.isElement(node) &&
-        (tagName == null || (tagName == browser.name(node) && (uri == null || uri == namespaceUri(node, browser))))
+    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = nodes filter {
+        node => browser.isElement(node) &&
+            (tagName == null || tagName == browser.name(node)) &&
+            (uri == null || uri == namespaceUri(node, browser))
+    }
 
 }
 
@@ -40,18 +43,20 @@ object Any extends ElementSelector(null, null)
 
 final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    def apply[T](node: T, browser: NodeBrowser[T]) = right(node, browser) && (combinator.op match {
-        case ">" => parent(node, browser).map({left(_, browser)}).getOrElse(false)
-        case " " => matchesAnyParent(node, browser, {p: T => left(p, browser)})
-        case "+" =>
-            val children = siblings(node, browser)
-            val index = children.indexOf(node)
-            index > 0 && left(children(index - 1), browser)
-        case "~" =>
-            val children = siblings(node, browser)
-            children.take(children.indexOf(node)).filter({left(_, browser)}).nonEmpty
-        case s: String => browser.findSelectorCombinatorMatcher(s)(node, browser)
-    })
+    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = right(nodes, browser) filter { node =>
+        (combinator.op match {
+            case ">" => parent(node, browser) map {p => left(List(p), browser).nonEmpty} getOrElse false
+            case " " => matchesAnyParent(node, browser, {p: T => left(List(p), browser).nonEmpty})
+            case "+" =>
+                val children = siblings(node, browser)
+                val index = children.indexOf(node)
+                index > 0 && left(children.slice(index - 1, index), browser).nonEmpty
+            case "~" =>
+                val children = siblings(node, browser)
+                left(children take children.indexOf(node), browser).nonEmpty
+            case s: String => browser.findSelectorCombinatorMatcher(s)(node, browser)
+        })
+    }
 
     override def toString = left.toString + combinator + right
 

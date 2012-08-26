@@ -100,6 +100,20 @@ public class QueryTest {
     }
 
     @Test
+    public void testSelectorList() {
+        Iterator<Node> result = filter("bar, *, foo");
+        assertNext("foo", result);
+        assertNext("bar", result);
+        assertNext("bar", result);
+        assertNext("baz", result);
+        assertNext("faz", result);
+        assertNext("wombat", result);
+        assertNext("baz", result);
+        assertNext("baz", result);
+        assertFalse(result.hasNext());
+    }
+
+    @Test
     public void testElementOfType() {
         Iterator<Node> result = filter("bar");
         assertNext("bar", result);
