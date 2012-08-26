@@ -100,7 +100,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
     }
 
     def expression = rep1(("+" | "-" | dimension | numericLit | stringLit | ident) <~ opt(s)) ^^ {
-        case expressions => expressions.mkString(" ")
+        case expressions => expressions.mkString("")
     }
 
     def parse(s: String) = {

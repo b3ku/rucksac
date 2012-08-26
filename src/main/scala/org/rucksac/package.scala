@@ -34,8 +34,14 @@ package object utils {
         parent != null && (matches(parent) || matchesAnyParent(parent, browser, matches))
     }
 
-    def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map {children(_, browser)} getOrElse
-        (List(node))
+    def siblings[T](node: T, browser: NodeBrowser[T]) = parent(node, browser) map
+        { children(_, browser).filter(browser.isElement(_)) } getOrElse (List(node))
+
+    def siblingsOfSameType[T](node: T, browser: NodeBrowser[T]) = {
+        val expName = (browser.name(node), browser.namespaceUri(node))
+        siblings(node, browser).filter(el =>
+            browser.isElement(el) && (browser.name(el), browser.namespaceUri(el)) == expName)
+    }
 
 }
 

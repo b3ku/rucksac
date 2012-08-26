@@ -47,7 +47,7 @@ class Lexer(registry: NodeMatcherRegistry) extends Lexical with RegexParsers wit
     lazy val ident  = "(?i)([-]?" + nmstart + nmchar + "*)"
     lazy val num    = """([0-9]*\.[0-9]+|[0-9]+)"""
     lazy val string = "(" + string1 + "|" + string2 + ")"
-    lazy val s      = """[ \t\r\n\f]"""
+    lazy val s      = """[ \t\r\n\f]+"""
 
     def token = (ident.r ^^ Identifier
         | (num + ident).r ^^ Dimension

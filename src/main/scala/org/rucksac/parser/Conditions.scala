@@ -60,29 +60,21 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 
 final class PseudoClassCondition(pc: String) extends Condition {
 
-    def apply[T](node: T, browser: NodeBrowser[T]): Boolean = {
-        def ofType(f: Iterable[T] => Boolean): Boolean = {
-            val (nodeName, nodeNamespaceUri) = (browser.name(node), namespaceUri(node, browser))
-            f(siblings(node, browser).filter({
-                c => browser.isElement(c) && browser.name(c) == nodeName && namespaceUri(c, browser) == nodeNamespaceUri
-            }))
-        }
-        pc match {
-            case "first-child" => siblings(node, browser).indexOf(node) == 0
-            case "last-child" =>
-                val children = siblings(node, browser)
-                children.indexOf(node) == children.size - 1
-            case "only-child" => siblings(node, browser).size == 1
-            case "only-of-type" => ofType {_.size == 1}
-            case "first-of-type" => ofType {_.head == node}
-            case "last-of-type" => ofType {_.last == node}
-            case "root" => browser.parent(node) == null
-            case "empty" => children(node, browser).isEmpty
-            case "enabled" => browser.isElement(node) && attribute(node, browser, "disabled") != "disabled"
-            case "disabled" => browser.isElement(node) && attribute(node, browser, "disabled") == "disabled"
-            case "checked" => browser.isElement(node) && attribute(node, browser, "checked") == "checked"
-            case s: String => browser.findPseudoClassMatcher(s)(node, browser)
-        }
+    def apply[T](node: T, browser: NodeBrowser[T]): Boolean = pc match {
+        case "first-child" => siblings(node, browser).indexOf(node) == 0
+        case "last-child" =>
+            val children = siblings(node, browser)
+            children.indexOf(node) == children.size - 1
+        case "only-child" => siblings(node, browser).size == 1
+        case "only-of-type" => siblingsOfSameType(node, browser).size == 1
+        case "first-of-type" => siblingsOfSameType(node, browser).head == node
+        case "last-of-type" => siblingsOfSameType(node, browser).last == node
+        case "root" => browser.parent(node) == null
+        case "empty" => children(node, browser).isEmpty
+        case "enabled" => browser.isElement(node) && attribute(node, browser, "disabled") != "disabled"
+        case "disabled" => browser.isElement(node) && attribute(node, browser, "disabled") == "disabled"
+        case "checked" => browser.isElement(node) && attribute(node, browser, "checked") == "checked"
+        case s: String => browser.findPseudoClassMatcher(s)(node, browser)
     }
 
     override def toString = ":" + pc
@@ -98,7 +90,10 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
         case "nth-last-child" =>
             val children = siblings(node, browser)
             positionMatcher.matches(children.size - children.indexOf(node))
-//        case "nth-of-type" => TODO
+        case "nth-of-type" => positionMatcher.matches(siblingsOfSameType(node, browser).indexOf(node) + 1)
+        case "nth-last-of-type" =>
+            val siblings = siblingsOfSameType(node, browser)
+            positionMatcher.matches(siblings.size - siblings.indexOf(node))
         case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
         case "lang" =>
             val matches: (T) => Boolean = {
@@ -111,4 +106,5 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
     }
 
     override def toString = ":" + name + "(" + exp + ")"
+
 }
