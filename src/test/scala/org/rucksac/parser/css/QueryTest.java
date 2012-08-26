@@ -111,6 +111,11 @@ public class QueryTest {
         assertNext("baz", result);
         assertNext("baz", result);
         assertFalse(result.hasNext());
+
+        result = filter("wombat, faz");
+        assertNext("faz", result);
+        assertNext("wombat", result);
+        assertFalse(result.hasNext());
     }
 
     @Test

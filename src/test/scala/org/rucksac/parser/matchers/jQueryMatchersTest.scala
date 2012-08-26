@@ -65,6 +65,14 @@ class jQueryMatchersTest {
         assertEquals("input", result.next().getTagName)
         assertFalse(result.hasNext)
 
+        result = Query(":eq(0)").filter(root).iterator()
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(5)").filter(root).iterator()
+        assertFalse(result.hasNext)
+
+        result = Query(":eq(foo)").filter(root).iterator()
+        assertFalse(result.hasNext)
     }
 
 }

@@ -60,7 +60,7 @@ package object matchers {
             try {
                 nodes.get(exp.toInt - 1) == node
             } catch {
-                case _: NumberFormatException => false // TODO logging?
+                case _: NumberFormatException | _: IndexOutOfBoundsException => false // TODO logging?
             }
         }
     }
