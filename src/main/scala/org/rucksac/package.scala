@@ -55,15 +55,19 @@ package object matchers {
             (browser.name(node) == "input" && attribute(node, browser, "type") == "button"))
     }
 
-    private object eqFunc extends PseudoFunctionMatcher {
+    private class indexBasedFunc(comp: (Int, Int) => Boolean) extends PseudoFunctionMatcher {
         def apply[T](node: T, nodes: java.util.List[T], browser: NodeBrowser[T], exp: String) = {
             try {
-                nodes.get(exp.toInt - 1) == node
+                comp(nodes.indexOf(node), exp.toInt)
             } catch {
-                case _: NumberFormatException | _: IndexOutOfBoundsException => false // TODO logging?
+                case _: NumberFormatException=> throw new ParseException(exp)
             }
         }
     }
+
+    private object eqFunc extends indexBasedFunc(_ == _)
+    private object gtFunc extends indexBasedFunc(_ > _)
+    private object ltFunc extends indexBasedFunc(_ < _)
 
     private object neOp extends AttributeOperationMatcher {
         def apply[T](node: T, browser: NodeBrowser[T], uri: String, name: String, value: String) = {
@@ -76,10 +80,10 @@ package object matchers {
         def registerNodeMatchers(registry: NodeMatcherRegistry) {
             registry.registerPseudoClassMatcher("button", buttonClass)
             registry.registerPseudoFunctionMatcher("eq", eqFunc)
+            registry.registerPseudoFunctionMatcher("gt", gtFunc)
+            registry.registerPseudoFunctionMatcher("lt", ltFunc)
             registry.registerAttributeOperationMatcher("!=", neOp)
 
-            //TODO :gt()
-            //TODO :lt()
             //TODO :even
             //TODO :odd
             //TODO :first

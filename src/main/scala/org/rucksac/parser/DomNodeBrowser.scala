@@ -12,7 +12,7 @@ class DomNodeBrowser extends NodeBrowser[Node] {
 
     import scala.collection.JavaConversions._
 
-    all(this);
+    all(this)
 
     def parent(node: Node) = node.getParentNode match {
         case el: Element => el
@@ -22,7 +22,7 @@ class DomNodeBrowser extends NodeBrowser[Node] {
     def children(node: Node) = node match {
         case e: Element => {
             val children = e.getChildNodes
-            (0 until children.getLength).map({i => children.item(i)})
+            (0 until children.getLength) map {children.item(_)}
         }
         case _ => throw new IllegalArgumentException(node.toString)
     }

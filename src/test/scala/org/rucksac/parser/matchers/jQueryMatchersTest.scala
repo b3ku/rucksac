@@ -1,9 +1,11 @@
 package org.rucksac.parser.matchers
 
-import org.junit.Test
-import javax.xml.parsers.DocumentBuilderFactory
-import org.rucksac.parser.css._
 import org.junit.Assert._
+import org.junit.{After, Before, Test}
+import org.rucksac.parser.XmlNodeBrowser
+import org.rucksac.parser.css._
+import org.rucksac.{ParseException, NodeBrowser}
+import scala.xml.Node
 
 /**
  * @author Andreas Kuhrwahl
@@ -11,68 +13,100 @@ import org.junit.Assert._
  */
 class jQueryMatchersTest {
 
-    val document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
-    val root     = document.createElement("root")
-    root.setAttribute("class", "oink")
-    document.appendChild(root)
+    val xml =
+        <root class="oink">
+            <button class="button"/>
+            <input type="button" class="button"/>
+        </root>
 
-    //Button
-    var el = document.createElement("button")
-    el.setAttribute("class", "button")
-    root.appendChild(el)
-    el = document.createElement("input")
-    el.setAttribute("type", "button")
-    el.setAttribute("class", "button")
-    root.appendChild(el)
+    private def filter(query: String): java.util.Iterator[Node] = new Query[Node](query).filter(xml).iterator()
+
+    @Before
+    def setup() {
+        sys.props.put(classOf[NodeBrowser[XmlNodeBrowser]].getName, classOf[XmlNodeBrowser].getName)
+    }
+
+    @After
+    def tearDown() {
+        sys.props.remove(classOf[NodeBrowser[XmlNodeBrowser]].getName)
+    }
 
     @Test
     def testButton() {
-        val result = Query(":button").filter(root).iterator()
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        val result = filter(":button")
+        assertEquals("button", (result.next() \ "@class").text)
+        assertEquals("button", (result.next() \ "@class").text)
         assertFalse(result.hasNext)
     }
 
     @Test
     def testNe() {
-        var result = Query("[class=oink]").filter(root).iterator()
-        assertEquals("root", result.next().getTagName)
+        var result = filter("[class=oink]")
+        assertEquals("root", result.next().label)
         assertFalse(result.hasNext)
 
-        result = Query("[class!=oink]").filter(root).iterator()
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        result = filter("[class!=oink]")
+        assertEquals("button", (result.next() \ "@class").text)
+        assertEquals("button", (result.next() \ "@class").text)
         assertFalse(result.hasNext)
 
-        result = Query("[class!='']").filter(root).iterator()
-        assertEquals("root", result.next().getTagName)
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
-        assertEquals("button", result.next().getAttributes.getNamedItem("class").getNodeValue)
+        result = filter("[class!='']")
+        assertEquals("root", result.next().label)
+        assertEquals("button", (result.next() \ "@class").text)
+        assertEquals("button", (result.next() \ "@class").text)
         assertFalse(result.hasNext)
     }
 
     @Test
     def testEq() {
-        var result = Query(":eq(1)").filter(root).iterator()
-        assertEquals("root", result.next().getTagName)
+        var result = filter(":eq(0)")
+        assertEquals("root", result.next().label)
         assertFalse(result.hasNext)
 
-        result = Query(":eq(2)").filter(root).iterator()
-        assertEquals("button", result.next().getTagName)
+        result = filter(":eq(1)")
+        assertEquals("button", result.next().label)
         assertFalse(result.hasNext)
 
-        result = Query(":eq(3)").filter(root).iterator()
-        assertEquals("input", result.next().getTagName)
+        result = filter(":eq(2)")
+        assertEquals("input", result.next().label)
         assertFalse(result.hasNext)
 
-        result = Query(":eq(0)").filter(root).iterator()
+        result = filter(":eq(-1)")
         assertFalse(result.hasNext)
 
-        result = Query(":eq(5)").filter(root).iterator()
+        result = filter(":eq(5)")
+        assertFalse(result.hasNext)
+    }
+
+    @Test(expected = classOf[ParseException])
+    def testEqFail() {
+        filter(":eq(foo)")
+    }
+
+    @Test
+    def testGt() {
+        var result = filter(":gt(0)")
+        assertEquals("button", result.next().label)
+        assertEquals("input", result.next().label)
         assertFalse(result.hasNext)
 
-        result = Query(":eq(foo)").filter(root).iterator()
+        // FIXME
+//        result = filter("* > :gt(0)")
+//        assertEquals("input", result.next().label)
+//        assertFalse(result.hasNext)
+    }
+
+    @Test
+    def testLt() {
+        var result = filter(":lt(2)")
+        assertEquals("root", result.next().label)
+        assertEquals("button", result.next().label)
         assertFalse(result.hasNext)
+
+        // FIXME
+//        result = filter("* > :lt(1)")
+//        assertEquals("input", result.next().label)
+//        assertFalse(result.hasNext)
     }
 
 }
