@@ -43,7 +43,7 @@ object Any extends ElementSelector(null, null)
 
 final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = right(nodes, browser) filter { node =>
+    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = right(nodes filter { node =>
         (combinator.op match {
             case ">" => parent(node, browser) map {p => left(List(p), browser).nonEmpty} getOrElse false
             case " " => matchesAnyParent(node, browser, {p: T => left(List(p), browser).nonEmpty})
@@ -56,7 +56,7 @@ final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorTyp
                 left(children take children.indexOf(node), browser).nonEmpty
             case s: String => browser.findSelectorCombinatorMatcher(s)(node, browser)
         })
-    }
+    }, browser)
 
     override def toString = left.toString + combinator + right
 

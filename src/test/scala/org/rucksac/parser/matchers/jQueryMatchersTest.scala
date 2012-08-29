@@ -90,10 +90,9 @@ class jQueryMatchersTest {
         assertEquals("input", result.next().label)
         assertFalse(result.hasNext)
 
-        // FIXME
-//        result = filter("* > :gt(0)")
-//        assertEquals("input", result.next().label)
-//        assertFalse(result.hasNext)
+        result = filter("* > :gt(0)")
+        assertEquals("input", result.next().label)
+        assertFalse(result.hasNext)
     }
 
     @Test
@@ -103,10 +102,9 @@ class jQueryMatchersTest {
         assertEquals("button", result.next().label)
         assertFalse(result.hasNext)
 
-        // FIXME
-//        result = filter("* > :lt(1)")
-//        assertEquals("input", result.next().label)
-//        assertFalse(result.hasNext)
+        result = filter("* > :lt(1)")
+        assertEquals("button", result.next().label)
+        assertFalse(result.hasNext)
     }
 
 }
