@@ -42,7 +42,7 @@ object Any extends ElementSelector(null, null)
 
 final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    def apply[T](nodes: Seq[T]) = right(nodes) filter {
+    def apply[T](nodes: Seq[T]) = right(nodes filter {
         node =>
             (combinator.op match {
                 case ">" => node.parent() map {p => left(List(p)).nonEmpty} getOrElse false
@@ -56,7 +56,7 @@ final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorTyp
                     left(children take children.indexOf(node)).nonEmpty
                 case s: String => NodeMatcherRegistry().selectorCombinators(s)(node)
             })
-    }
+    })
 
     override def toString = left.toString + combinator + right
 

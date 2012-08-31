@@ -12,15 +12,21 @@ private object buttonClass extends PseudoClassMatcher {
         (node.name() == "button" || (node.name() == "input" && node.attribute("type") == "button"))
 }
 
-private object eqFunc extends PseudoFunctionMatcher {
+private class indexBasedFunc(comp: (Int, Int) => Boolean) extends PseudoFunctionMatcher {
     def apply[T](node: T, nodes: Seq[T], exp: String) = {
         try {
-            nodes(exp.toInt - 1) == node
+            comp(nodes.indexOf(node), exp.toInt)
         } catch {
-            case _: NumberFormatException | _: IndexOutOfBoundsException => false // TODO logging?
+            case _: NumberFormatException => throw new ParseException(exp)
         }
     }
 }
+
+private object eqFunc extends indexBasedFunc(_ == _)
+
+private object gtFunc extends indexBasedFunc(_ > _)
+
+private object ltFunc extends indexBasedFunc(_ < _)
 
 private object neOp extends AttributeOperationMatcher {
     def apply[T](node: T, uri: String, name: String, value: String) = {
@@ -33,6 +39,8 @@ object jQueryMatcherRegistrar extends matcher.NodeMatcherRegistrar {
     def registerNodeMatchers(registry: NodeMatcherRegistry) {
         registry.pseudoClasses("button") = buttonClass
         registry.pseudoFunctions("eq") = eqFunc
+        registry.pseudoFunctions("gt") = gtFunc
+        registry.pseudoFunctions("lt") = ltFunc
         registry.attributeOperations("!=") = neOp
 
         //TODO :gt()

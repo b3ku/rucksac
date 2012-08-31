@@ -15,7 +15,7 @@ class DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
 
     def children(node: org.w3c.dom.Node) = {
         val children = node.getChildNodes
-        (0 until children.getLength).map({i => children.item(i)})
+        (0 until children.getLength) map {children.item(_)}
     }
 
     def isElement(node: org.w3c.dom.Node) = node.isInstanceOf[Element]
