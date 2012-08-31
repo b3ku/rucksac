@@ -4,9 +4,9 @@ import util.parsing.combinator.lexical.Lexical
 import util.parsing.combinator.token.StdTokens
 import util.parsing.combinator.RegexParsers
 import scala.util.parsing.input.CharArrayReader.EofCh
-import org.rucksac.NodeMatcherRegistry
 import collection.immutable.Set
 import util.Sorting
+import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
@@ -23,15 +23,15 @@ trait CssTokens extends StdTokens {
 
 }
 
-class Lexer(registry: NodeMatcherRegistry) extends Lexical with RegexParsers with CssTokens {
+class Lexer extends Lexical with RegexParsers with CssTokens {
 
     override type Elem = Char
     override val whiteSpace = """(\/\*[^*]*\*+([^/*][^*]*\*+)*\/)*""".r
 
     private val keywords =
         Set[String](":not(", ",", ">", "+", "-", "#", ".", ":", "(", ")", "[", "]", "=", "~=", "^=", "$=", "*=", "|=",
-            "|", "*", "~") ++ Set(registry.getSupportedAttributeOperations: _*) ++
-            Set(registry.getSupportedSelectorCombinators: _*)
+            "|", "*", "~") ++ NodeMatcherRegistry().attributeOperations.keySet ++
+            NodeMatcherRegistry().selectorCombinators.keySet
 
     def whitespace = this.whiteSpace
 

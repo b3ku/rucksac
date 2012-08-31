@@ -28,14 +28,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.util.Iterator;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.rucksac.ParseException;
-import org.rucksac.PseudoClassNotSupportedException;
-import org.rucksac.PseudoFunctionNotSupportedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -58,7 +57,8 @@ public class QueryTest {
                 + "<foo id='myFoo'>"
                 + "  <bar id='b1' class='baz bum' name='bam' />"
                 + "  <bar id='b2' class='last' name='bim bam'>Hello World</bar>"
-                + "  <baz id='first' class='fazHolder' name='bim-bam-bum' disabled='disabled' checked='checked' dummy=''>"
+                +
+                "  <baz id='first' class='fazHolder' name='bim-bam-bum' disabled='disabled' checked='checked' dummy=''>"
                 + "    <faz lang='en-us' />"
                 + "  </baz>"
                 + "  <wombat id='only' />"
@@ -440,32 +440,32 @@ public class QueryTest {
         assertFalse(result.hasNext());
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsHyperLink() {
         filter(":link");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsVisitedHyperLink() {
         filter(":visited");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsActivated() {
         filter(":active");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsHovered() {
         filter(":hover");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsFocused() {
         filter(":focus");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsTarget() {
         filter(":target");
     }
@@ -499,7 +499,7 @@ public class QueryTest {
         assertFalse(result.hasNext());
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testElementIsIndeterminate() {
         filter(":indeterminate");
     }
@@ -518,27 +518,27 @@ public class QueryTest {
         assertFalse(result.hasNext());
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testFirstFormattedLineOfElement() {
         filter("::first-line");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testFirstFormattedLetterOfElement() {
         filter("::first-letter");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testCurrentSelectionOfElement() {
         filter("::selection");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testGeneratedContentBeforeOfElement() {
         filter("::before");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testGeneratedContentAfterOfElement() {
         filter("::after");
     }
@@ -668,7 +668,7 @@ public class QueryTest {
         assertFalse(result.hasNext());
     }
 
-    @Test(expected = PseudoFunctionNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testPseudoFunctionNotSupportedException() {
         filter("::foo(bar)");
     }
@@ -678,7 +678,7 @@ public class QueryTest {
         filter("foo < bar");
     }
 
-    @Test(expected = PseudoClassNotSupportedException.class)
+    @Test(expected = ParseException.class)
     public void testPseudoClassNotSupportedException() {
         filter(":foo");
     }

@@ -2,8 +2,8 @@ package org.rucksac.parser.css
 
 import util.parsing.combinator.syntactical.StdTokenParsers
 import org.rucksac.parser._
-import org.rucksac.{NodeMatcherRegistry, ParseException, NodeBrowser}
-import org.rucksac.utils._
+import org.rucksac.matcher.NodeMatcherRegistry
+import org.rucksac._
 
 /**
  * A parser for the CSS selectors level 3 grammar
@@ -14,10 +14,10 @@ import org.rucksac.utils._
  * @since 13.05.12
  */
 
-class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
+class Parser extends StdTokenParsers {
 
     type Tokens = Lexer
-    val lexical = new Tokens(registry)
+    val lexical = new Tokens
 
     private case class NextSelector(combinator: CombinatorType, selector: Selector)
 
@@ -40,7 +40,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
         case seq ~ list => selector_sequence(seq, list)
     }
 
-    private val combinators = (("+" | ">" | "~") /: registry.getSupportedSelectorCombinators)(
+    private val combinators = (("+" | ">" | "~") /: NodeMatcherRegistry().selectorCombinators.keySet)(
         (combs, comb) => comb | combs)
     def combinator = ((opt(s) ~> combinators <~ opt(s)) | s) ^^ CombinatorType
 
@@ -83,7 +83,7 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
     protected def attribute_name = opt(s) ~> qualified_name <~ opt(s)
     private val attribute_operations = (("=" | "~=" | "^=" | "$=" | "*=" | "|=") /:
-        registry.getSupportedAttributeOperations)((ops, op) => op | ops)
+        NodeMatcherRegistry().attributeOperations.keySet)((ops, op) => op | ops)
     protected def attribute_operation = attribute_operations <~ opt(s)
     protected def attribute_value = (ident | stringLit) <~ opt(s)
 
@@ -114,15 +114,13 @@ class Parser(registry: NodeMatcherRegistry) extends StdTokenParsers {
 
 class SelectorList(selectors: List[Selector]) {
 
-    import scala.collection.JavaConversions._
-
-    def filter[T](node: T, browser: NodeBrowser[T]) = {
+    def filter[T](node: T) = {
 
         def allNodes(node: T): List[T] =
-            (List(node) /: children(node, browser))((matches, child) => matches ::: allNodes(child))
+            (List(node) /: node.children())((matches, child) => matches ::: allNodes(child))
 
         val nodes = allNodes(node)
-        val selectorMatches = (List[T]() /: selectors)((matches, selector) => matches ::: selector(nodes, browser))
+        val selectorMatches = (List[T]() /: selectors)((matches, selector) => matches ++ selector(nodes))
         nodes intersect selectorMatches // return each matching node only once and in the correct order
     }
 

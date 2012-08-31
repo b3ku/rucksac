@@ -1,7 +1,7 @@
 package org.rucksac.parser
 
-import org.rucksac.NodeBrowser
-import org.rucksac.utils._
+import org.rucksac._
+import matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
@@ -12,7 +12,7 @@ trait Condition extends Matchable
 
 final class CombinatorCondition(first: Condition, second: Condition) extends Condition {
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = second(first(nodes, browser), browser)
+    def apply[T](nodes: Seq[T]) = second(first(nodes))
 
     override def toString = first.toString + second.toString
 
@@ -20,7 +20,7 @@ final class CombinatorCondition(first: Condition, second: Condition) extends Con
 
 final class NegativeCondition(con: Condition) extends Condition {
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = nodes diff con(nodes, browser)
+    def apply[T](nodes: Seq[T]) = nodes diff con(nodes)
 
     override def toString = ":not(" + con + ")"
 
@@ -28,7 +28,7 @@ final class NegativeCondition(con: Condition) extends Condition {
 
 final class SelectorCondition(sel: Selector) extends Condition {
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = sel(nodes, browser)
+    def apply[T](nodes: Seq[T]) = sel(nodes)
 
     override def toString = sel.toString
 
@@ -37,9 +37,9 @@ final class SelectorCondition(sel: Selector) extends Condition {
 final class AttributeCondition(uri: String, name: String, value: String, op: String)
     extends Qualifiable(uri, name) with Condition {
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = nodes filter {
-        node => browser.isElement(node) && {
-            lazy val attrValue = attribute(node, browser, uri, name)
+    def apply[T](nodes: Seq[T]) = nodes filter {
+        node => node.isElement() && {
+            lazy val attrValue = Option(node.attribute(uri, name)).getOrElse("")
             op match {
                 case "#" | "=" => attrValue == value
                 case "." | "~=" => attrValue.split(" ") contains value
@@ -47,8 +47,8 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
                 case "^=" => attrValue startsWith value
                 case "$=" => attrValue endsWith value
                 case "*=" => attrValue contains value
-                case null => browser.attribute(node, uri, name) != null
-                case s: String => browser.findAttributeOperationMatcher(s)(node, browser, uri, name, value)
+                case null => node.attribute(uri, name) != null
+                case s: String => NodeMatcherRegistry().attributeOperations(s)(node, uri, name, value)
             }
         }
     }
@@ -62,24 +62,22 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 
 final class PseudoClassCondition(pc: String) extends Condition {
 
-    import scala.collection.JavaConversions._
-
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = nodes filter {
+    def apply[T](nodes: Seq[T]) = nodes filter {
         node => pc match {
-            case "first-child" => siblings(node, browser).indexOf(node) == 0
+            case "first-child" => node.siblings().indexOf(node) == 0
             case "last-child" =>
-                val children = siblings(node, browser)
+                val children = node.siblings()
                 children.indexOf(node) == children.size - 1
-            case "only-child" => siblings(node, browser).size == 1
-            case "only-of-type" => siblingsOfSameType(node, browser).size == 1
-            case "first-of-type" => siblingsOfSameType(node, browser).head == node
-            case "last-of-type" => siblingsOfSameType(node, browser).last == node
-            case "root" => browser.parent(node) == null
-            case "empty" => children(node, browser).isEmpty
-            case "enabled" => browser.isElement(node) && attribute(node, browser, "disabled") != "disabled"
-            case "disabled" => browser.isElement(node) && attribute(node, browser, "disabled") == "disabled"
-            case "checked" => browser.isElement(node) && attribute(node, browser, "checked") == "checked"
-            case s: String => browser.findPseudoClassMatcher(s)(node, nodes, browser)
+            case "only-child" => node.siblings().size == 1
+            case "only-of-type" => node.siblingsOfSameType().size == 1
+            case "first-of-type" => node.siblingsOfSameType().head == node
+            case "last-of-type" => node.siblingsOfSameType().last == node
+            case "root" => node.parent() == None
+            case "empty" => node.children().isEmpty
+            case "enabled" => node.isElement() && node.attribute("disabled") != "disabled"
+            case "disabled" => node.isElement() && node.attribute("disabled") == "disabled"
+            case "checked" => node.isElement() && node.attribute("checked") == "checked"
+            case s: String => NodeMatcherRegistry().pseudoClasses(s)(node, nodes)
         }
     }
 
@@ -89,29 +87,27 @@ final class PseudoClassCondition(pc: String) extends Condition {
 
 final class PseudoFunctionCondition(name: String, exp: String) extends Condition {
 
-    import scala.collection.JavaConversions._
-
     lazy val positionMatcher = NthParser.parse(exp)
 
-    def apply[T](nodes: List[T], browser: NodeBrowser[T]) = nodes filter {
+    def apply[T](nodes: Seq[T]) = nodes filter {
         node => name match {
-            case "nth-child" => positionMatcher.matches(siblings(node, browser).indexOf(node) + 1)
+            case "nth-child" => positionMatcher.matches(node.siblings().indexOf(node) + 1)
             case "nth-last-child" =>
-                val children = siblings(node, browser)
+                val children = node.siblings()
                 positionMatcher.matches(children.size - children.indexOf(node))
-            case "nth-of-type" => positionMatcher.matches(siblingsOfSameType(node, browser).indexOf(node) + 1)
+            case "nth-of-type" => positionMatcher.matches(node.siblingsOfSameType().indexOf(node) + 1)
             case "nth-last-of-type" =>
-                val siblings = siblingsOfSameType(node, browser)
+                val siblings = node.siblingsOfSameType()
                 positionMatcher.matches(siblings.size - siblings.indexOf(node))
-            case "contains" => textNodes(children(node, browser), browser).filter(_.contains(exp)).nonEmpty
+            case "contains" => node.textNodes().filter(_.contains(exp)).nonEmpty
             case "lang" =>
-                val matches: (T) => Boolean = {
+                val matches: T => Boolean = {
                     p: T =>
-                        val lang: String = attribute(p, browser, "lang")
+                        val lang: String = Option(p.attribute("lang")).getOrElse("")
                         lang == exp || lang.startsWith(exp + "-")
                 }
-                (browser.isElement(node) && matches(node)) || matchesAnyParent(node, browser, matches)
-            case s: String => browser.findPseudoFunctionMatcher(s)(node, nodes, browser, exp)
+                (node.isElement() && matches(node)) || node.matchesAnyParent(matches)
+            case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, nodes, exp)
         }
     }
 

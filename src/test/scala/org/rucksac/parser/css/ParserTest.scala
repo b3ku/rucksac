@@ -1,7 +1,7 @@
 package org.rucksac.parser.css
 
 import org.junit.{Assert, Test}
-import org.rucksac.parser.{DomNodeBrowser, Qualifiable, ElementSelector, Selector}
+import org.rucksac.parser.{Qualifiable, ElementSelector, Selector}
 import org.rucksac.ParseException
 
 /**
@@ -12,7 +12,7 @@ import org.rucksac.ParseException
 class ParserTest {
 
     object Parser {
-        def apply() = new Parser(new DomNodeBrowser)
+        def apply() = new Parser()
     }
 
     @Test(expected = classOf[ParseException])

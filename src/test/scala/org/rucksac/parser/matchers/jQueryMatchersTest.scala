@@ -4,12 +4,15 @@ import org.junit.Test
 import javax.xml.parsers.DocumentBuilderFactory
 import org.rucksac.parser.css._
 import org.junit.Assert._
+import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
  * @since 24.08.12
  */
 class jQueryMatchersTest {
+
+    NodeMatcherRegistry.all()
 
     val document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
     val root     = document.createElement("root")
