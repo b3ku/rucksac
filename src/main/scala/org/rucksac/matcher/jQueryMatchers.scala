@@ -8,12 +8,12 @@ import org.rucksac._
  */
 
 private object buttonClass extends PseudoClassMatcher {
-    def apply[T](node: T, nodes: Seq[T]) = node.isElement() &&
-        (node.name() == "button" || (node.name() == "input" && node.attribute("type") == "button"))
+    def apply[T](node: Node[T], nodes: Seq[Node[T]]) = node.isElement &&
+            (node.name == "button" || (node.name == "input" && node.attribute("type") == "button"))
 }
 
 private class indexBasedFunc(comp: (Int, Int) => Boolean) extends PseudoFunctionMatcher {
-    def apply[T](node: T, nodes: Seq[T], exp: String) = {
+    def apply[T](node: Node[T], nodes: Seq[Node[T]], exp: String) = {
         try {
             comp(nodes.indexOf(node), exp.toInt)
         } catch {
@@ -29,7 +29,7 @@ private object gtFunc extends indexBasedFunc(_ > _)
 private object ltFunc extends indexBasedFunc(_ < _)
 
 private object neOp extends AttributeOperationMatcher {
-    def apply[T](node: T, uri: String, name: String, value: String) = {
+    def apply[T](node: Node[T], uri: String, name: String, value: String) = {
         val attrValue = node.attribute(uri, name)
         attrValue == null || attrValue != value
     }

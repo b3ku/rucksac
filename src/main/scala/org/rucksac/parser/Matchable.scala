@@ -1,11 +1,9 @@
 package org.rucksac.parser
 
+import org.rucksac.Node
+
 /**
  * @author Andreas Kuhrwahl
- * @since 22.08.12
+ * @since 01.09.12
  */
-trait Matchable {
-
-    def apply[T](nodes: Seq[T]): Seq[T]
-
-}
+trait Matchable {def apply[T](node: Node[T]): Boolean}

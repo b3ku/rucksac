@@ -3,7 +3,7 @@ package org.rucksac
 import scala.xml.Elem
 import scala.xml.Text
 import scala.xml.PCData
-import scala.collection.mutable
+import scala.xml.Document
 
 /**
  * @author Oliver Becker
@@ -11,14 +11,9 @@ import scala.collection.mutable
  */
 class XmlNodeBrowser extends NodeBrowser[scala.xml.Node] {
 
-    private var parentMap = mutable.HashMap[scala.xml.Node, scala.xml.Node]()
+    def children(node: scala.xml.Node) = node.child
 
-    def parent(node: scala.xml.Node) = parentMap get node getOrElse null
-
-    def children(node: scala.xml.Node) = {
-        node.child foreach {c => parentMap.put(c, node)}
-        node.child
-    }
+    def isDocument(node: scala.xml.Node) = node.isInstanceOf[Document]
 
     def isElement(node: scala.xml.Node) = node.isInstanceOf[Elem]
 

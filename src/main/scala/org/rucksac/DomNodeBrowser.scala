@@ -1,6 +1,6 @@
 package org.rucksac
 
-import org.w3c.dom.{Text, Element}
+import org.w3c.dom.{Document, Text, Element}
 
 /**
  * @author Andreas Kuhrwahl
@@ -8,15 +8,12 @@ import org.w3c.dom.{Text, Element}
  */
 class DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
 
-    def parent(node: org.w3c.dom.Node) = node.getParentNode match {
-        case el: Element => el
-        case _ => null // Document
-    }
-
     def children(node: org.w3c.dom.Node) = {
         val children = node.getChildNodes
-        (0 until children.getLength) map {children.item(_)}
+        (0 until children.getLength) map { children.item(_) }
     }
+
+    def isDocument(node: org.w3c.dom.Node) = node.isInstanceOf[Document]
 
     def isElement(node: org.w3c.dom.Node) = node.isInstanceOf[Element]
 

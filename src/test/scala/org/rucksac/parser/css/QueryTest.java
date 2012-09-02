@@ -25,6 +25,7 @@ package org.rucksac.parser.css;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.rucksac.parser.css.Query4J.$;
 
 import java.io.ByteArrayInputStream;
 import java.util.Iterator;
@@ -35,7 +36,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.rucksac.ParseException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -45,10 +45,10 @@ import org.w3c.dom.Node;
  */
 public class QueryTest {
 
-    private Document document;
+    private Node document;
 
     private Iterator<Node> filter(String query) {
-        return new Query<Node>(query).filter(this.document.getDocumentElement()).iterator();
+        return $(query, this.document).iterator();
     }
 
     @Before

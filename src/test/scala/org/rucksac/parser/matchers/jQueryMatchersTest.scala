@@ -4,7 +4,6 @@ import org.junit.Assert._
 import org.junit.{Ignore, Test}
 import org.rucksac.parser.css._
 import org.rucksac.ParseException
-import scala.xml.Node
 import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
@@ -22,82 +21,82 @@ class jQueryMatchersTest {
             <input type="button" class="button"/>
         </root>
 
-    private def filter(query: String): java.util.Iterator[Node] = new Query[Node](query).filter(xml).iterator()
+    //private def filter(query: String): Iterator[Query[Node]] = $(query, xml).iterator()
 
     @Test
     def testButton() {
-        val result = filter(":button")
-        assertEquals("button", (result.next() \ "@class").text)
-        assertEquals("button", (result.next() \ "@class").text)
-        assertFalse(result.hasNext)
+        val result = $(":button", xml)
+        assertEquals(2, result.size)
+        assertEquals("button", (result(0)() \ "@class").text)
+        assertEquals("button", (result(1)() \ "@class").text)
     }
 
     @Test
     def testNe() {
-        var result = filter("[class=oink]")
-        assertEquals("root", result.next().label)
-        assertFalse(result.hasNext)
+        var result = $("[class=oink]", xml)
+        assertEquals(1, result.size)
+        assertEquals("root", result(0)().label)
 
-        result = filter("[class!=oink]")
-        assertEquals("button", (result.next() \ "@class").text)
-        assertEquals("button", (result.next() \ "@class").text)
-        assertFalse(result.hasNext)
+        result = $("[class!=oink]", xml)
+        assertEquals(2, result.size)
+        assertEquals("button", (result(0)() \ "@class").text)
+        assertEquals("button", (result(1)() \ "@class").text)
 
-        result = filter("[class!='']")
-        assertEquals("root", result.next().label)
-        assertEquals("button", (result.next() \ "@class").text)
-        assertEquals("button", (result.next() \ "@class").text)
-        assertFalse(result.hasNext)
+        result = $("[class!='']", xml)
+        assertEquals(3, result.size)
+        assertEquals("root", result(0)().label)
+        assertEquals("button", (result(1)() \ "@class").text)
+        assertEquals("button", (result(2)() \ "@class").text)
     }
 
     @Test
     def testEq() {
-        var result = filter(":eq(0)")
-        assertEquals("root", result.next().label)
-        assertFalse(result.hasNext)
+        var result = $(":eq(0)", xml)
+        assertEquals(1, result.size)
+        assertEquals("root", result(0)().label)
 
-        result = filter(":eq(1)")
-        assertEquals("button", result.next().label)
-        assertFalse(result.hasNext)
+        result = $(":eq(1)", xml)
+        assertEquals(1, result.size)
+        assertEquals("button", result(0)().label)
 
-        result = filter(":eq(2)")
-        assertEquals("input", result.next().label)
-        assertFalse(result.hasNext)
+        result = $(":eq(2)", xml)
+        assertEquals(1, result.size)
+        assertEquals("input", result(0)().label)
 
-        result = filter(":eq(-1)")
-        assertFalse(result.hasNext)
+        result = $(":eq(-1)", xml)
+        assertEquals(0, result.size)
 
-        result = filter(":eq(5)")
-        assertFalse(result.hasNext)
+        result = $(":eq(5)", xml)
+        assertEquals(0, result.size)
     }
 
     @Test(expected = classOf[ParseException])
     def testEqFail() {
-        filter(":eq(foo)")
+        $(":eq(foo)", xml)
     }
 
     @Test
     def testGt() {
-        var result = filter(":gt(0)")
-        assertEquals("button", result.next().label)
-        assertEquals("input", result.next().label)
-        assertFalse(result.hasNext)
+        var result = $(":gt(0)", xml)
+        assertEquals(2, result.size)
+        assertEquals("button", result(0)().label)
+        assertEquals("input", result(1)().label)
 
-        result = filter("* > :gt(0)")
-        assertEquals("input", result.next().label)
-        assertFalse(result.hasNext)
+        result = $("* > :gt(0)", xml)
+        assertEquals(1, result.size)
+        assertEquals("input", result(0)().label)
     }
 
     @Test
     def testLt() {
-        var result = filter(":lt(2)")
-        assertEquals("root", result.next().label)
-        assertEquals("button", result.next().label)
-        assertFalse(result.hasNext)
+        var result = $(":lt(2)", xml)
+        assertEquals(2, result.size)
+        assertEquals("root", result(0)().label)
+        assertEquals("button", result(1)().label)
 
-        result = filter("* > :lt(1)")
-        assertEquals("button", result.next().label)
-        assertFalse(result.hasNext)
+        result = $("* > :lt(1)", xml)
+        assertEquals(1, result.size)
+        assertEquals("button", result(0)().label)
     }
 
 }

@@ -10,12 +10,6 @@ package org.rucksac
 trait NodeBrowser[T] {
 
     /**
-     * @return the parent element node of <code>node</code> or <code>null</code> if <code>node</code> is the root
-     *         element
-     */
-    def parent(node: T): T
-
-    /**
      * Get the children of an node.
      *
      * @return the child nodes of <code>node</code>, an empty list if there are no children
@@ -23,12 +17,17 @@ trait NodeBrowser[T] {
     def children(node: T): Seq[T]
 
     /**
-     * @return <code>true</code> of <code>node</code> is an element
+     * @return <code>true</code> if <code>node</code> is a document
+     */
+    def isDocument(node: T): Boolean
+
+    /**
+     * @return <code>true</code> if <code>node</code> is an element
      */
     def isElement(node: T): Boolean
 
     /**
-     * @return <code>true</code> of <code>node</code> is a text node
+     * @return <code>true</code> if <code>node</code> is a text node
      */
     def isText(node: T): Boolean
 

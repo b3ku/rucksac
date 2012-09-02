@@ -23,42 +23,41 @@ trait SimpleSelector extends Selector
 
 final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Selector {
 
-    def apply[T](nodes: Seq[T]) = con(sel(nodes))
+    def apply[T](node: Node[T]) = sel(node) && con(node)
 
     override def toString = sel.toString + con.toString
 
 }
 
-class ElementSelector(uri: String, tagName: String) extends Qualifiable(uri, tagName) with SimpleSelector {
+class ElementSelector(uri: String, tagName: String) extends SimpleSelector {
 
-    def apply[T](nodes: Seq[T]) = nodes filter {
-        node => node.isElement() && (tagName == null || tagName == node.name()) &&
-            (uri == null || uri == node.namespaceUri())
-    }
+    def apply[T](node: Node[T]) = node.isElement && (tagName == null || tagName == node.name) &&
+            (uri == null || uri == node.namespaceUri)
+
+    override def toString = QualifiedName(uri, tagName).toString
 
 }
 
-object Any extends ElementSelector(null, null)
+object ElementSelector {
+    def any() = new ElementSelector(null, null)
+}
 
-final class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
+class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    def apply[T](nodes: Seq[T]) = right(nodes filter {
-        node =>
-            (combinator.op match {
-                case ">" => node.parent() map {p => left(List(p)).nonEmpty} getOrElse false
-                case " " => node.matchesAnyParent({p => left(List(p)).nonEmpty})
-                case "+" =>
-                    val children = node.siblings()
-                    val index = children.indexOf(node)
-                    index > 0 && left(children.slice(index - 1, index)).nonEmpty
-                case "~" =>
-                    val children = node.siblings()
-                    left(children take children.indexOf(node)).nonEmpty
-                case s: String => NodeMatcherRegistry().selectorCombinators(s)(node)
-            })
+    def apply[T](node: Node[T]) = right(node) && (combinator.op match {
+        case ">" => node.parent map { left(_) } getOrElse false
+        case " " => node.matchesAnyParent({ left(_) })
+        case "+" =>
+            val children = node.siblings
+            val index = children.indexOf(node)
+            index > 0 && left(children(index - 1))
+        case "~" =>
+            val children = node.siblings
+            children.take(children.indexOf(node)).filter({ left(_) }).nonEmpty
+        case s: String => NodeMatcherRegistry().selectorCombinators(s)(node)
     })
 
-    override def toString = left.toString + combinator + right
+    override def toString = left.toString + combinator.toString + right
 
 }
 
