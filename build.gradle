@@ -1,7 +1,7 @@
 apply plugin: 'scala'
 apply plugin: 'idea'
 
-defaultTasks 'clean', 'build'
+defaultTasks 'build'
 
 version = '1.0'
 
