@@ -60,10 +60,7 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 final class PseudoClassCondition(pc: String) extends Condition {
 
     def apply[T](node: Node[T]) = pc match {
-        case "first-child" =>
-            val of: Int = node.siblings.indexOf(node)
-            println(of)
-            of == 0
+        case "first-child" => node.siblings.indexOf(node) == 0
         case "last-child" =>
             val children = node.siblings
             children.indexOf(node) == children.size - 1
@@ -109,6 +106,6 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
         case _ => throw new ParseException("not supported")
     }
 
-    override def toString() = ":" + name + "(" + exp + ")"
+    override def toString = ":" + name + "(" + exp + ")"
 
 }
