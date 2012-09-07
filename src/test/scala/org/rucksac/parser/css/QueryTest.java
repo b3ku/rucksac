@@ -152,6 +152,13 @@ public class QueryTest {
         result = filter("[dummy]");
         assertNext("baz", "first", result);
         assertFalse(result.hasNext());
+
+        result = filter("[dummy='']");
+        assertNext("baz", "first", result);
+        assertFalse(result.hasNext());
+
+        result = filter("[none='']");
+        assertFalse(result.hasNext());
     }
 
     @Test

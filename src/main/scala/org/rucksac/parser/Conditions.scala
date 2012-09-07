@@ -37,16 +37,16 @@ final class SelectorCondition(sel: Selector) extends Condition {
 final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition {
 
     def apply[T](node: Node[T]) = node.isElement && {
-        lazy val attrValue = Option(node.attribute(uri, name)).getOrElse("")
+        val attrValue = node.attribute(uri, name)
         op match {
             case "#" | "=" => attrValue == value
-            case "." | "~=" => attrValue.split(" ") contains value
-            case "|=" => attrValue == value || attrValue.startsWith(value + "-")
-            case "^=" => attrValue startsWith value
-            case "$=" => attrValue endsWith value
-            case "*=" => attrValue contains value
-            case null => node.attribute(uri, name) != null
-            case s: String => NodeMatcherRegistry().attributeOperations(s)(node, uri, name, value)
+            case "." | "~=" => attrValue != null && attrValue.split(" ").contains(value)
+            case "|=" => attrValue != null && (attrValue == value || attrValue.startsWith(value + "-"))
+            case "^=" => attrValue != null && attrValue.startsWith(value)
+            case "$=" => attrValue != null && attrValue.endsWith(value)
+            case "*=" => attrValue != null && attrValue.contains(value)
+            case null => attrValue != null
+            case s: String => NodeMatcherRegistry().attributeOperations(s)(attrValue, value)
         }
     }
 

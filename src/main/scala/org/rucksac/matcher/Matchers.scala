@@ -13,4 +13,4 @@ trait PseudoFunctionMatcher {def apply[T](node: Node[T], nodes: Seq[Node[T]], ex
 
 trait SelectorCombinatorMatcher {def apply[T](node: Node[T]): Boolean}
 
-trait AttributeOperationMatcher {def apply[T](node: Node[T], uri: String, name: String, value: String): Boolean}
+trait AttributeOperationMatcher {def apply[T](attributeValue: String, operationValue: String): Boolean}

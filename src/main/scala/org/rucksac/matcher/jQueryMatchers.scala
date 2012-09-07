@@ -29,9 +29,8 @@ private object gtFunc extends indexBasedFunc(_ > _)
 private object ltFunc extends indexBasedFunc(_ < _)
 
 private object neOp extends AttributeOperationMatcher {
-    def apply[T](node: Node[T], uri: String, name: String, value: String) = {
-        val attrValue = node.attribute(uri, name)
-        attrValue == null || attrValue != value
+    def apply[T](attributeValue: String, operationValue: String) = {
+        attributeValue == null || attributeValue != operationValue
     }
 }
 
