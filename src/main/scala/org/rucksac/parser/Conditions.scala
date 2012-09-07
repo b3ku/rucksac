@@ -14,11 +14,13 @@ final class CombinatorCondition(first: Condition, second: Condition) extends Con
 
     def apply[T](node: Node[T]) = first(node) && second(node)
 
+    def apply[T](nodes: List[Node[T]]) = second(first(nodes))
+
     override def toString = first.toString + second.toString
 
 }
 
-final class NegativeCondition(con: Condition) extends Condition {
+final class NegativeCondition(con: Condition) extends Condition with ListMatchable {
 
     def apply[T](node: Node[T]) = !con(node)
 
@@ -26,7 +28,7 @@ final class NegativeCondition(con: Condition) extends Condition {
 
 }
 
-final class SelectorCondition(sel: Selector) extends Condition {
+final class SelectorCondition(sel: Selector) extends Condition with ListMatchable {
 
     def apply[T](node: Node[T]) = sel(node)
 
@@ -34,7 +36,7 @@ final class SelectorCondition(sel: Selector) extends Condition {
 
 }
 
-final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition {
+final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition with ListMatchable {
 
     def apply[T](node: Node[T]) = node.isElement && {
         val attrValue = node.attribute(uri, name)
@@ -57,7 +59,7 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 
 }
 
-final class PseudoClassCondition(pc: String) extends Condition {
+final class PseudoClassCondition(pc: String) extends Condition with ListMatchable {
 
     def apply[T](node: Node[T]) = pc match {
         case "first-child" => node.siblings.indexOf(node) == 0
@@ -85,7 +87,7 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
 
     lazy val positionMatcher = NthParser.parse(exp)
 
-    def apply[T](node: Node[T]) = name match {
+    private def matches[T](node: Node[T], nodes: List[Node[T]] = List.empty) = name match {
         case "nth-child" => positionMatcher.matches(node.siblings.indexOf(node) + 1)
         case "nth-last-child" =>
             val children = node.siblings
@@ -102,9 +104,12 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
                     lang == exp || lang.startsWith(exp + "-")
             }
             (node.isElement && matches(node)) || node.matchesAnyParent(matches)
-        //case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, nodes, exp)
-        case _ => throw new ParseException("not supported")
+        case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, nodes, exp)
     }
+
+    def apply[T](node: Node[T]) = matches(node)
+
+    def apply[T](nodes: List[Node[T]]) = nodes filter { matches(_, nodes) }
 
     override def toString = ":" + name + "(" + exp + ")"
 
