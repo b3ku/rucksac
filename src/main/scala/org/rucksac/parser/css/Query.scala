@@ -1,7 +1,9 @@
 package org.rucksac.parser
 
-import collection.immutable._
+//import collection.immu
 import org.rucksac.Node
+import collection._
+import mutable.ArrayBuffer
 
 /**
  * @author Andreas Kuhrwahl
@@ -10,40 +12,63 @@ import org.rucksac.Node
 
 package object css {
 
-    case class Query[T](node: Node[T]) extends IndexedSeq[Query[T]] {
+    class Query[T](seq: Seq[Node[T]]) extends IndexedSeq[Node[T]] with SeqLike[Node[T], Query[T]] {
 
-        private val children = node.children
+        def length = seq.size
 
-        def length = children.size
+        def apply(index: Int): Node[T] = seq(index)
 
-        def apply(idx: Int): Query[T] = Query[T](children(idx))
+        override def newBuilder: mutable.Builder[Node[T], Query[T]] =
+            new mutable.Builder[Node[T], Query[T]] {
+                def emptyList() = new ArrayBuffer[Node[T]]()
 
-        def apply() = node()
+                var current = emptyList()
 
-        def findAll(p: Query[T] => Boolean): List[Query[T]] = {
-            def allMatches(query: Query[T]): List[Query[T]] = (List[Query[T]]() /: query)((matches, q) => {
-                var result = matches
-                if (p(q)) {
-                    result = matches :+ q
+                def +=(elem: Node[T]) = {
+                    current += elem
+                    this
                 }
-                result ++ allMatches(q)
+
+                def clear() { current = emptyList() }
+                def result() = new Query(current)
+            }
+
+        def findAll(predicate: Node[T] => Boolean): Query[T] = {
+            def allMatches(query: Seq[Node[T]]): List[Node[T]] = (List[Node[T]]() /: query)((matches, node) => {
+                var result = matches
+                if (predicate(node)) {
+                    result = matches :+ node
+                }
+                result ++ allMatches(node.children)
             })
-            allMatches(this)
+            new Query(allMatches(this))
         }
+
+    }
+
+    object Query {
+
+        def apply[T]() = new Query[T](List())
+
+        def apply[T](n: T) = new Query[T](List(Node(n, None)))
+
+        def apply[T](p: Node[T] => Boolean, n: T) = new Query[T](List(Node(n, None))).findAll(p)
 
     }
 
     object $ {
 
-        def apply[T](n: T) = Query[T](Node(n, None))
+        def apply[T]() = Query[T]()
 
-        def apply[T](p: Query[T] => Boolean, n: T) = Query[T](Node(n, None)).findAll(p)
+        def apply[T](n: T) = Query(n)
+
+        def apply[T](p: Node[T] => Boolean, n: T) = Query(p, n)
 
     }
 
-    implicit def asPredicate(sel: String): Query[_] => Boolean = {
+    implicit def asPredicate(sel: String): Node[_] => Boolean = {
         val selectors = new Parser().parse(sel)
-        (q => (false /: selectors)(_ || _(q.node)))
+        (node => (false /: selectors)(_ || _(node)))
     }
 
 }

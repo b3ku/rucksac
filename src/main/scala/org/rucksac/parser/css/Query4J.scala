@@ -10,6 +10,6 @@ object Query4J {
 
     import scala.collection.JavaConversions._
 
-    def $[T](q: String, node: T): java.lang.Iterable[T] = Query[T](Node(node, None)).findAll(q).map(_())
+    def $[T](q: String, node: T): java.lang.Iterable[T] = Query(q, node).map(_())
 
 }

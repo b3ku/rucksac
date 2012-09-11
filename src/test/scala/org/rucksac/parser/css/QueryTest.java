@@ -29,13 +29,14 @@ import static org.rucksac.parser.css.Query4J.$;
 
 import java.io.ByteArrayInputStream;
 import java.util.Iterator;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.rucksac.ParseException;
+import org.rucksac.matcher.NodeMatcherRegistry;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -68,6 +69,8 @@ public class QueryTest {
 
         this.document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
                 new ByteArrayInputStream(documentAsText.getBytes("UTF-8")));
+
+        NodeMatcherRegistry.all();
     }
 
     private void assertNext(String expectedName, Iterator<Node> result) {
@@ -693,6 +696,14 @@ public class QueryTest {
     @Test(expected = ParseException.class)
     public void testAttributeOperationNotSupportedException() {
         filter("[foo#=bar]");
+    }
+
+    @Test
+    @Ignore
+    public void testEq() throws Exception {
+        Iterator<Node> result = filter("baz:eq(0)");
+        assertNext("baz", "first", result);
+        assertFalse(result.hasNext());
     }
 
 }

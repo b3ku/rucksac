@@ -3,7 +3,6 @@ package org.rucksac.parser.css
 import org.w3c.dom.{Attr, Document}
 import org.junit.{Ignore, Test, Before}
 import javax.xml.parsers.DocumentBuilderFactory
-import org.rucksac.Node
 
 /**
  * @author Andreas Kuhrwahl
@@ -37,25 +36,27 @@ class PerformanceTest {
     @Before
     def setup() {
         document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
-        val root = createElement("root", "doc", null, null);
+        val root = createElement("root", "doc", null, null)
         (0 to 400) foreach {
             i =>
-                val child = createElement("first", null, "eins uno un one", createAttribute("name", "bim"));
-                root.appendChild(child);
+                val child = createElement("first", null, "eins uno un one", createAttribute("name", "bim"))
+                root.appendChild(child)
                 (0 to 1000) foreach {
                     j =>
                         child.appendChild(
-                            createElement("second", null, "zwei dos deux two", createAttribute("name", "bam")));
+                            createElement("second", null, "zwei dos deux two", createAttribute("name", "bam")))
                         child.appendChild(
-                            createElement("third", null, "drei tres trois three", createAttribute("name", "bum")));
+                            createElement("third", null, "drei tres trois three", createAttribute("name", "bum")))
                 }
         }
-        document.appendChild(root);
+        document.appendChild(root)
     }
 
     @Test
     def testMatch() {
-        new Query(Node(document, None)).findAll("root#doc > first.one.uno[name='bim'] *[name]")
+        val start = System.currentTimeMillis()
+        $("root#doc > first.one.uno[name='bim'] *[name]", document)
+        println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
     }
 
 }
