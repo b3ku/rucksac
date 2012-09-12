@@ -28,15 +28,18 @@ class QueryApiTest {
                 "  <baz id='third' />" +
                 "</foo>"
         document = DocumentBuilderFactory.newInstance.newDocumentBuilder.parse(
-            new ByteArrayInputStream(documentAsText.getBytes("UTF-8")));
+            new ByteArrayInputStream(documentAsText.getBytes("UTF-8")))
     }
 
     @Test
     def testApi() {
-        val attr = $("#myFoo > baz", document).filter("#second, #third, :not(#first)")(1)() match {
-            case e: Element => e.getAttribute("id")
+        val nodes = $("#myFoo > baz", document).filter("#first.fazHolder").findAll("faz")
+        assertEquals(nodes()(0), nodes(0)())
+
+        val attr = nodes()(0) match {
+            case e: Element => e.getAttribute("lang")
         }
-        assertEquals("third", attr)
+        assertEquals("en-us", attr)
     }
 
 }

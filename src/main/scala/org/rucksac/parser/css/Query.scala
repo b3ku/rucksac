@@ -1,6 +1,5 @@
 package org.rucksac.parser
 
-//import collection.immu
 import org.rucksac.Node
 import collection._
 import mutable.ArrayBuffer
@@ -17,6 +16,8 @@ package object css {
         def length = seq.size
 
         def apply(index: Int): Node[T] = seq(index)
+
+        def apply(): Seq[T] = seq map(_())
 
         override def newBuilder: mutable.Builder[Node[T], Query[T]] =
             new mutable.Builder[Node[T], Query[T]] {
@@ -56,15 +57,7 @@ package object css {
 
     }
 
-    object $ {
-
-        def apply[T]() = Query[T]()
-
-        def apply[T](n: T) = Query(n)
-
-        def apply[T](p: Node[T] => Boolean, n: T) = Query(p, n)
-
-    }
+    val $ = Query
 
     implicit def asPredicate(sel: String): Node[_] => Boolean = {
         val selectors = new Parser().parse(sel)
