@@ -33,7 +33,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.rucksac.ParseException;
 import org.rucksac.matcher.NodeMatcherRegistry;
@@ -699,7 +698,6 @@ public class QueryTest {
     }
 
     @Test
-    @Ignore
     public void testEq() throws Exception {
         Iterator<Node> result = filter("baz:eq(0)");
         assertNext("baz", "first", result);

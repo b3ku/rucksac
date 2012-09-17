@@ -14,29 +14,35 @@ final class CombinatorCondition(first: Condition, second: Condition) extends Con
 
     def apply[T](node: Node[T]) = first(node) && second(node)
 
-    def apply[T](nodes: List[Node[T]]) = second(first(nodes))
+    def apply[T](nodes: Seq[Node[T]]) = second(first(nodes))
+
+    lazy val mustFilter = first.mustFilter || second.mustFilter
 
     override def toString = first.toString + second.toString
 
 }
 
-final class NegativeCondition(con: Condition) extends Condition with ListMatchable {
+final class NegativeCondition(con: Condition) extends Condition with SeqMatchable {
 
     def apply[T](node: Node[T]) = !con(node)
+
+    lazy val mustFilter = con.mustFilter
 
     override def toString = ":not(" + con + ")"
 
 }
 
-final class SelectorCondition(sel: Selector) extends Condition with ListMatchable {
+final class SelectorCondition(sel: Selector) extends Condition with SeqMatchable {
 
     def apply[T](node: Node[T]) = sel(node)
+
+    lazy val mustFilter = sel.mustFilter
 
     override def toString = sel.toString
 
 }
 
-final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition with ListMatchable {
+final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition with SeqMatchable {
 
     def apply[T](node: Node[T]) = node.isElement && {
         val attrValue = node.attribute(uri, name)
@@ -52,6 +58,8 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
         }
     }
 
+    val mustFilter = false
+
     override def toString = op match {
         case "#" | "." => op + value
         case _ => "[" + QualifiedName(uri, name) + (if (value == null) "" else op + value) + "]"
@@ -59,7 +67,7 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 
 }
 
-final class PseudoClassCondition(pc: String) extends Condition with ListMatchable {
+final class PseudoClassCondition(pc: String) extends Condition with SeqMatchable {
 
     def apply[T](node: Node[T]) = pc match {
         case "first-child" => node.siblings.indexOf(node) == 0
@@ -79,6 +87,8 @@ final class PseudoClassCondition(pc: String) extends Condition with ListMatchabl
         case _ => throw new ParseException("not supported")
     }
 
+    val mustFilter = false
+
     override def toString = ":" + pc
 
 }
@@ -87,7 +97,7 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
 
     lazy val positionMatcher = NthParser.parse(exp)
 
-    private def matches[T](node: Node[T], nodes: List[Node[T]] = List.empty) = name match {
+    private def matches[T](node: Node[T], nodes: Seq[Node[T]] = List.empty) = name match {
         case "nth-child" => positionMatcher.matches(node.siblings.indexOf(node) + 1)
         case "nth-last-child" =>
             val children = node.siblings
@@ -109,7 +119,9 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
 
     def apply[T](node: Node[T]) = matches(node)
 
-    def apply[T](nodes: List[Node[T]]) = nodes filter { matches(_, nodes) }
+    def apply[T](nodes: Seq[Node[T]]) = nodes filter { matches(_, nodes) }
+
+    val mustFilter = NodeMatcherRegistry().pseudoFunctions.contains(name)
 
     override def toString = ":" + name + "(" + exp + ")"
 

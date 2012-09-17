@@ -3,6 +3,7 @@ package org.rucksac.parser.css
 import org.w3c.dom.{Attr, Document}
 import org.junit.{Ignore, Test, Before}
 import javax.xml.parsers.DocumentBuilderFactory
+import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
@@ -35,6 +36,8 @@ class PerformanceTest {
 
     @Before
     def setup() {
+        NodeMatcherRegistry.all()
+
         document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
         val root = createElement("root", "doc", null, null)
         (0 to 400) foreach {
@@ -53,9 +56,16 @@ class PerformanceTest {
     }
 
     @Test
-    def testMatch() {
+    def testPredicate() {
         val start = System.currentTimeMillis()
         $("root#doc > first.one.uno[name='bim'] *[name]", document)
+        println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
+    }
+
+    @Test
+    def testFilter() {
+        val start = System.currentTimeMillis()
+        $("root#doc:eq(0) > first.one.uno[name='bim'] *[name]", document)
         println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
     }
 

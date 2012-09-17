@@ -25,16 +25,20 @@ final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Sel
 
     def apply[T](node: Node[T]) = sel(node) && con(node)
 
-    def apply[T](nodes: List[Node[T]]) = con(sel(nodes))
+    def apply[T](nodes: Seq[Node[T]]) = con(sel(nodes))
+
+    lazy val mustFilter = con.mustFilter
 
     override def toString = sel.toString + con.toString
 
 }
 
-class ElementSelector(uri: String, tagName: String) extends SimpleSelector with ListMatchable {
+class ElementSelector(uri: String, tagName: String) extends SimpleSelector with SeqMatchable {
 
     def apply[T](node: Node[T]) = node.isElement && (tagName == null || tagName == node.name) &&
             (uri == null || uri == node.namespaceUri)
+
+    val mustFilter = false
 
     override def toString = QualifiedName(uri, tagName).toString
 
@@ -61,7 +65,9 @@ class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, rig
 
     def apply[T](node: Node[T]) = right(node) && matchLeft(node)
 
-    def apply[T](nodes: List[Node[T]]) = right(nodes) filter { matchLeft(_) }
+    def apply[T](nodes: Seq[Node[T]]) = right(nodes) filter { matchLeft(_) }
+
+    lazy val mustFilter = left.mustFilter || right.mustFilter
 
     override def toString = left.toString + combinator.toString + right
 

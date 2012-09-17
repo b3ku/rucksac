@@ -10,6 +10,8 @@ trait Matchable {
 
     def apply[T](node: Node[T]): Boolean
 
-    def apply[T](nodes: List[Node[T]]): List[Node[T]]
+    def apply[T](nodes: Seq[Node[T]]): Seq[Node[T]]
+
+    val mustFilter: Boolean
 
 }
