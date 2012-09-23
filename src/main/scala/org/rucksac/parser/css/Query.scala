@@ -21,10 +21,24 @@ package object css {
 
         def filter(nodes: Seq[Node[T]]): Seq[Node[T]] = nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
 
+        // TODO get rid of mustFilter and finally of class QueryPredicate
+//        def apply(nodes: Seq[Node[T]]): Query[T] = {
+//            def collectNodes(nodes: Seq[Node[T]]): (List[Node[T]], List[Node[T]]) =
+//                (nodes :\ (List[Node[T]](), List[Node[T]]()))((node, pair) => {
+//                    val (all, matches) = pair
+//                    val (allChildren, matchChildren) = collectNodes(node.children)
+//                    (node :: allChildren ::: all,
+//                        if (apply(node)) node :: matchChildren ::: matches else matchChildren ::: matches)
+//                })
+//            val (_, matches) = collectNodes(nodes)
+//            new Query(matches)
+//        }
+
         def apply(nodes: Seq[Node[T]]): Query[T] = {
-            def collectNodes(nodes: Seq[Node[T]]): Seq[Node[T]] =
-                (List[Node[T]]() /: nodes)((collected, node) => {
-                    (if (mustFilter || apply(node)) collected :+ node else collected) ++ collectNodes(node.children)
+            def collectNodes(nodes: Seq[Node[T]]): List[Node[T]] =
+                (nodes :\ List[Node[T]]())((node, collected) => {
+                    val current = collectNodes(node.children) ::: collected
+                    if (mustFilter || apply(node)) node :: current else current
                 })
             val collected = collectNodes(nodes)
             new Query(if (mustFilter) filter(collected) else collected)
