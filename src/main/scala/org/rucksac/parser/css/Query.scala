@@ -21,19 +21,6 @@ package object css {
 
         def filter(nodes: Seq[Node[T]]): Seq[Node[T]] = nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
 
-        // TODO get rid of mustFilter and finally of class QueryPredicate
-//        def apply(nodes: Seq[Node[T]]): Query[T] = {
-//            def collectNodes(nodes: Seq[Node[T]]): (List[Node[T]], List[Node[T]]) =
-//                (nodes :\ (List[Node[T]](), List[Node[T]]()))((node, pair) => {
-//                    val (all, matches) = pair
-//                    val (allChildren, matchChildren) = collectNodes(node.children)
-//                    (node :: allChildren ::: all,
-//                        if (apply(node)) node :: matchChildren ::: matches else matchChildren ::: matches)
-//                })
-//            val (_, matches) = collectNodes(nodes)
-//            new Query(matches)
-//        }
-
         def apply(nodes: Seq[Node[T]]): Query[T] = {
             def collectNodes(nodes: Seq[Node[T]]): List[Node[T]] =
                 (nodes :\ List[Node[T]]())((node, collected) => {
@@ -73,6 +60,8 @@ package object css {
 
         def findAll(predicate: QueryPredicate[T]): Query[T] = predicate(seq)
 
+        def filter(predicate: String): Query[T] = new Query(new QueryPredicate[T](predicate).filter(seq))
+
     }
 
     object Query {
@@ -88,10 +77,6 @@ package object css {
     }
 
     val $ = Query
-
-    implicit def asDefaultPredicate[T](sel: String): Node[T] => Boolean = {
-        new QueryPredicate(sel)
-    }
 
     implicit def asQueryPredicate(sel: String): QueryPredicate[_] = {
         new QueryPredicate(sel)

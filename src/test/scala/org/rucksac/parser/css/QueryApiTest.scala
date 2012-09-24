@@ -5,6 +5,7 @@ import org.junit.{Before, Test}
 import org.junit.Assert._
 import javax.xml.parsers.DocumentBuilderFactory
 import java.io.ByteArrayInputStream
+import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
@@ -16,6 +17,8 @@ class QueryApiTest {
 
     @Before
     def setup() {
+        NodeMatcherRegistry.all()
+
         var documentAsText = "" +
                 "<foo id='myFoo'>" +
                 "  <bar id='b1' class='baz bum' name='bam' />" +
@@ -33,7 +36,7 @@ class QueryApiTest {
 
     @Test
     def testApi() {
-        val nodes = $("#myFoo > baz", document).filter("#first.fazHolder").findAll("faz")
+        val nodes = $("#myFoo > baz", document).filter("#first.fazHolder:eq(0)").findAll("faz")
         assertEquals(nodes()(0), nodes(0)())
 
         val attr = nodes()(0) match {
