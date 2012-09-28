@@ -17,9 +17,13 @@ package object css {
 
         private lazy val mustFilter = (false /: selectors)(_ || _.mustFilter)
 
-        def apply(node: Node[T]): Boolean = (false /: selectors)(_ || _(node))
+        private def doFilter(nodes: Seq[Node[T]]): Seq[Node[T]] =
+            nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
 
-        def filter(nodes: Seq[Node[T]]): Seq[Node[T]] = nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
+        def filter(nodes: Seq[Node[T]]): Seq[Node[T]] =
+            if (mustFilter) doFilter(nodes) else nodes.filter(this)
+
+        def apply(node: Node[T]): Boolean = (false /: selectors)(_ || _(node))
 
         def apply(nodes: Seq[Node[T]]): Query[T] = {
             def collectNodes(nodes: Seq[Node[T]]): List[Node[T]] =
@@ -28,7 +32,7 @@ package object css {
                     if (mustFilter || apply(node)) node :: current else current
                 })
             val collected = collectNodes(nodes)
-            new Query(if (mustFilter) filter(collected) else collected)
+            new Query(if (mustFilter) doFilter(collected) else collected)
         }
 
     }
@@ -56,11 +60,11 @@ package object css {
                 def result() = new Query(current)
             }
 
-        def findAll(predicate: String): Query[T] = findAll(new QueryPredicate[T](predicate))
+        def findAll(expression: String): Query[T] = findAll(new QueryPredicate[T](expression))
 
         def findAll(predicate: QueryPredicate[T]): Query[T] = predicate(seq)
 
-        def filter(predicate: String): Query[T] = new Query(new QueryPredicate[T](predicate).filter(seq))
+        def filter(expression: String): Query[T] = new Query(new QueryPredicate[T](expression).filter(seq))
 
     }
 
@@ -78,8 +82,6 @@ package object css {
 
     val $ = Query
 
-    implicit def asQueryPredicate(sel: String): QueryPredicate[_] = {
-        new QueryPredicate(sel)
-    }
+    implicit def asQueryPredicate(sel: String): QueryPredicate[_] = new QueryPredicate(sel)
 
 }
