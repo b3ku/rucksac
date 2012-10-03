@@ -112,7 +112,7 @@ class Parser extends StdTokenParsers {
 
     def parse(q: String) = {
         phrase(selectors_group)(new lexical.Scanner(q)) match {
-            case Success(x, _) => x
+            case Success(x, _) => new Selectors(x)
             case NoSuccess(msg, _) => throw new ParseException(msg)
         }
     }

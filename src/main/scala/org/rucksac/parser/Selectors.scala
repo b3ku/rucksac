@@ -1,5 +1,6 @@
 package org.rucksac.parser
 
+import css.Query
 import org.rucksac._
 import matcher.NodeMatcherRegistry
 
@@ -20,6 +21,20 @@ case class CombinatorType(op: String) {
 trait Selector extends Matchable
 
 trait SimpleSelector extends Selector
+
+final class Selectors(selectors: List[Selector]) extends Selector {
+
+    def apply[T](node: Node[T]): Boolean = (false /: selectors)(_ || _(node))
+
+    def apply[T](nodes: Seq[Node[T]]): Seq[Node[T]] =
+        if (mustFilter) nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
+        else nodes.filter(apply(_))
+
+    lazy val mustFilter = (false /: selectors)(_ || _.mustFilter)
+
+    override def toString = selectors mkString ", "
+
+}
 
 final class ConditionalSelector(sel: SimpleSelector, con: Condition) extends Selector {
 
@@ -50,8 +65,8 @@ object ElementSelector {
 
 class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, right: Selector) extends Selector {
 
-    private def matchLeft[T](node: Node[T]) = (combinator.op match {
-        case ">" => node.parent map { left(_)} getOrElse false
+    def apply[T](node: Node[T]) = right(node) && (combinator.op match {
+        case ">" => node.parent map { left(_) } getOrElse false
         case " " => node.matchesAnyParent({ left(_) })
         case "+" =>
             val children = node.siblings
@@ -63,9 +78,16 @@ class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, rig
         case s: String => NodeMatcherRegistry().selectorCombinators(s)(node)
     })
 
-    def apply[T](node: Node[T]) = right(node) && matchLeft(node)
-
-    def apply[T](nodes: Seq[Node[T]]) = right(nodes) filter { matchLeft(_) }
+    def apply[T](nodes: Seq[Node[T]]): Seq[Node[T]] = {
+        val leftNodes = new Query(left(nodes))
+        combinator.op match {
+            case ">" => leftNodes.findChildren(right)
+            case " " => leftNodes.findAll(right)
+            case "+" => leftNodes.findAdjacentSiblings(right)
+            case "~" => leftNodes.findGeneralSiblings(right)
+            case s: String => NodeMatcherRegistry().selectorCombinators(s)(nodes)
+        }
+    }
 
     lazy val mustFilter = left.mustFilter || right.mustFilter
 

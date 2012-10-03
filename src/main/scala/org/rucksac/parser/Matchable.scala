@@ -12,6 +12,6 @@ trait Matchable {
 
     def apply[T](nodes: Seq[Node[T]]): Seq[Node[T]]
 
-    val mustFilter: Boolean
+    def mustFilter: Boolean
 
 }

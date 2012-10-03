@@ -83,8 +83,7 @@ final class PseudoClassCondition(pc: String) extends Condition with SeqMatchable
         case "enabled" => node.isElement && node.attribute("disabled") != "disabled"
         case "disabled" => node.isElement && node.attribute("disabled") == "disabled"
         case "checked" => node.isElement && node.attribute("checked") == "checked"
-        //case s: String => NodeMatcherRegistry().pseudoClasses(s)(node, nodes)
-        case _ => throw new ParseException("not supported")
+        case s: String => NodeMatcherRegistry().pseudoClasses(s)(node)
     }
 
     val mustFilter = false

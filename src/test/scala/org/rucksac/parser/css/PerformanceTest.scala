@@ -2,6 +2,7 @@ package org.rucksac.parser.css
 
 import org.w3c.dom.{Attr, Document}
 import org.junit.{Ignore, Test, Before}
+import org.junit.Assert._
 import javax.xml.parsers.DocumentBuilderFactory
 import org.rucksac.matcher.NodeMatcherRegistry
 
@@ -34,17 +35,20 @@ class PerformanceTest {
         attr
     }
 
+    val loop1 = 200
+    val loop2 = 100
+
     @Before
     def setup() {
         NodeMatcherRegistry.all()
 
         document = DocumentBuilderFactory.newInstance.newDocumentBuilder.newDocument
         val root = createElement("root", "doc", null, null)
-        (0 to 400) foreach {
+        (0 until loop1) foreach {
             i =>
                 val child = createElement("first", null, "eins uno un one", createAttribute("name", "bim"))
                 root.appendChild(child)
-                (0 to 1000) foreach {
+                (0 until loop2) foreach {
                     j =>
                         child.appendChild(
                             createElement("second", null, "zwei dos deux two", createAttribute("name", "bam")))
@@ -57,16 +61,20 @@ class PerformanceTest {
 
     @Test
     def testPredicate() {
-        val start = System.currentTimeMillis()
-        $("root#doc > first.one.uno[name='bim'] *[name]", document)
-        println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
+        executeTest("root#doc > first.one.uno[name='bim'] *[name]")
     }
 
     @Test
     def testFilter() {
+        executeTest("root#doc:eq(0) > first.one.uno[name='bim']:gt(-1) *[name]:gt(-1)")
+    }
+
+    private def executeTest(expression: String) {
+        System.gc()
         val start = System.currentTimeMillis()
-        $("root#doc:eq(0) > first.one.uno[name='bim'] *[name]", document)
+        val result = $(expression, document)
         println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
+        assertEquals(loop1 * loop2 * 2, result.size)
     }
 
 }

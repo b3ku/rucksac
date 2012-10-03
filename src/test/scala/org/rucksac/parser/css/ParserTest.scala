@@ -11,7 +11,7 @@ import org.rucksac.ParseException
 class ParserTest {
 
     object Parser {
-        def parse(q: String) = new Parser().parse(q) mkString ", "
+        def parse(q: String) = new Parser().parse(q).toString
     }
 
     @Test(expected = classOf[ParseException])

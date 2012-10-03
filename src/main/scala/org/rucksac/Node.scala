@@ -58,4 +58,6 @@ case class Node[T](node: T, p: Option[Node[T]]) {
         siblings filter { n => n.isElement && (n.name, n.namespaceUri) == expName }
     }
 
+    override def toString = name
+
 }

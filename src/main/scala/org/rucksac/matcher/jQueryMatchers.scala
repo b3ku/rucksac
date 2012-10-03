@@ -8,7 +8,7 @@ import org.rucksac._
  */
 
 private object buttonClass extends PseudoClassMatcher {
-    def apply[T](node: Node[T], nodes: Seq[Node[T]]) = node.isElement &&
+    def apply[T](node: Node[T]) = node.isElement &&
             (node.name == "button" || (node.name == "input" && node.attribute("type") == "button"))
 }
 
@@ -42,8 +42,6 @@ object jQueryMatcherRegistrar extends matcher.NodeMatcherRegistrar {
         registry.pseudoFunctions("lt") = ltFunc
         registry.attributeOperations("!=") = neOp
 
-        //TODO :gt()
-        //TODO :lt()
         //TODO :even
         //TODO :odd
         //TODO :first
