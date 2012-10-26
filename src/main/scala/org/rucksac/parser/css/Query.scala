@@ -1,6 +1,6 @@
 package org.rucksac.parser
 
-import org.rucksac.Node
+import org.rucksac.{NodeBrowserRegistry, Node}
 import collection._
 import mutable.ArrayBuffer
 
@@ -83,7 +83,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def filter(expression: String): Query[T] = new Query(asMatchable(expression).apply(seq))
+        def filter(expression: String) = new Query(asMatchable(expression).apply(seq))
 
     }
 
@@ -91,9 +91,9 @@ package object css {
 
         def apply[T]() = new Query[T](List())
 
-        def apply[T](n: T) = new Query[T](List(Node(n, None)))
+        def apply[T](n: T) = new Query[T](List(Node(n, None, NodeBrowserRegistry(n))))
 
-        def apply[T](p: Matchable, n: T): Query[T] = new Query[T](List(Node(n, None))).findAll(p)
+        def apply[T](p: Matchable, n: T): Query[T] = new Query[T](List(Node(n, None, NodeBrowserRegistry(n)))).findAll(p)
 
     }
 

@@ -40,3 +40,9 @@ class DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
     }
 
 }
+
+object DomNodeBrowser {
+
+    val instance = new DomNodeBrowser
+
+}

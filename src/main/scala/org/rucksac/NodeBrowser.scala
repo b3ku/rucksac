@@ -67,15 +67,3 @@ trait NodeBrowser[T] {
     def attribute(node: T, uri: String, name: String): String
 
 }
-
-object NodeBrowser {
-
-    val NODE_BROWSER         = getClass.getName + ".nodeBrowser"
-    val DEFAULT_NODE_BROWSER = Option(classOf[DomNodeBrowser].getName)
-
-    val nodeBrowserType = sys.props.get(NODE_BROWSER).orElse(DEFAULT_NODE_BROWSER).get
-    val nodeBrowser     = Class.forName(nodeBrowserType).newInstance()
-
-    def apply[T]() = nodeBrowser.asInstanceOf[NodeBrowser[T]]
-
-}

@@ -10,16 +10,17 @@ import org.rucksac.matcher.NodeMatcherRegistry
  * @author Andreas Kuhrwahl
  * @since 24.08.12
  */
-@Ignore
 class jQueryMatchersTest {
 
     NodeMatcherRegistry.all()
 
     val xml =
-        <root class="oink">
-            <button class="button"/>
-            <input type="button" class="button"/>
-        </root>
+        <doc>
+            <root class="oink">
+                <button class="button"/>
+                <input type="button" class="button"/>
+            </root>
+        </doc>
 
     //private def filter(query: String): Iterator[Query[Node]] = $(query, xml).iterator()
 

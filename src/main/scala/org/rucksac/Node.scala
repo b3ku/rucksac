@@ -7,9 +7,7 @@ import collection._
  * @since 30.08.12
  */
 
-case class Node[T](node: T, p: Option[Node[T]]) {
-
-    private val browser = NodeBrowser[T]()
+case class Node[T](node: T, p: Option[Node[T]], browser: NodeBrowser[T]) {
 
     def apply(): T = node
 
@@ -25,7 +23,7 @@ case class Node[T](node: T, p: Option[Node[T]]) {
             def length = children.size
 
             def apply(idx: Int) = {
-                Node(children(idx), parent)
+                Node(children(idx), parent, browser)
             }
         }
     }

@@ -41,3 +41,9 @@ class XmlNodeBrowser extends NodeBrowser[scala.xml.Node] {
     }
 
 }
+
+object XmlNodeBrowser {
+
+    val instance = new XmlNodeBrowser
+
+}
