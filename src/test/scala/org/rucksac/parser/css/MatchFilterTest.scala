@@ -17,20 +17,20 @@ class MatchFilterTest {
     NodeMatcherRegistry.all()
 
     val documentAsText = "" +
-        "<html>" +
-        "  <body>" +
-        "    <ul class='nav nav1'>" +
-        "      <li id='11'>List 1, item 1</li>" +
-        "      <li id='12'>List 1, item 2</li>" +
-        "      <li id='13'>List 1, item 3</li>" +
-        "    </ul>" +
-        "    <ul class='nav nav2'>" +
-        "      <li id='21'>List 2, item 1</li>" +
-        "      <li id='22'>List 2, item 2</li>" +
-        "      <li id='23'>List 2, item 3</li>" +
-        "    </ul>" +
-        "  </body>" +
-        "</html>"
+            "<html>" +
+            "  <body>" +
+            "    <ul class='nav nav1'>" +
+            "      <li id='11'>List 1, item 1</li>" +
+            "      <li id='12'>List 1, item 2</li>" +
+            "      <li id='13'>List 1, item 3</li>" +
+            "    </ul>" +
+            "    <ul class='nav nav2'>" +
+            "      <li id='21'>List 2, item 1</li>" +
+            "      <li id='22'>List 2, item 2</li>" +
+            "      <li id='23'>List 2, item 3</li>" +
+            "    </ul>" +
+            "  </body>" +
+            "</html>"
 
     val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(
         new ByteArrayInputStream(documentAsText.getBytes("UTF-8")));
@@ -106,6 +106,17 @@ class MatchFilterTest {
         assertEquals("13", result(1).attribute("id"))
         assertEquals("22", result(2).attribute("id"))
         assertEquals("23", result(3).attribute("id"))
+    }
+
+    @Test
+    def testEq11() {
+        var result = $("li", document).filter("ul.nav1 > li:eq(1)")
+        assertEquals(1, result.size)
+        assertEquals("12", result(0).attribute("id"))
+
+        result = $("li", document).filter("ul.nav2 > li:eq(1)")
+        assertEquals(1, result.size)
+        assertEquals("22", result(0).attribute("id"))
     }
 
 }
