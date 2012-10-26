@@ -34,10 +34,13 @@ package object css {
                 def result() = new Query(current)
             }
 
-        private def filterIfNecessary(matchable: Matchable, nodes: Seq[Node[T]]) =
-            new Query(if (matchable.mustFilter) matchable(nodes) else nodes)
+        private def build(seq: Seq[Node[T]]) = (newBuilder /: seq)(_ += _).result()
 
-        def findAll(matchable: Matchable): Query[T] = {
+        private def filterIfNecessary(matchable: Matchable, nodes: Seq[Node[T]]) =
+            // TODO rewrite @@, @@>, @@+ and @@~ by using newBuilder instead of constructing List() in the first place
+            build(if (matchable.mustFilter) matchable(nodes) else nodes)
+
+        def findAll(matchable: Matchable) = {
             def collectNodes(nodes: Seq[Node[T]], include: Boolean): List[Node[T]] =
                 (nodes :\ List[Node[T]]())((node, collected) => {
                     val current = collectNodes(node.children, true) ::: collected
@@ -46,7 +49,7 @@ package object css {
             filterIfNecessary(matchable, collectNodes(seq, false))
         }
 
-        def findChildren(matchable: Matchable): Query[T] = {
+        def findChildren(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, children) =>
                 if (matchable.mustFilter)
                     node.children ++: children
@@ -56,7 +59,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def findAdjacentSiblings(matchable: Matchable): Query[T] = {
+        def findAdjacentSiblings(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, siblings) => {
                 val all = node.siblings
                 val index = all.indexOf(node)
@@ -68,7 +71,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def findGeneralSiblings(matchable: Matchable): Query[T] = {
+        def findGeneralSiblings(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, siblings) => {
                 val all = node.siblings
                 val sibs = all.drop(all.indexOf(node) + 1)
@@ -83,7 +86,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def filter(expression: String) = new Query(asMatchable(expression).apply(seq))
+        def filter(expression: String) = build(asMatchable(expression).apply(seq))
 
     }
 
