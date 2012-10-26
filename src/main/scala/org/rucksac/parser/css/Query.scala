@@ -40,7 +40,7 @@ package object css {
             // TODO rewrite @@, @@>, @@+ and @@~ by using newBuilder instead of constructing List() in the first place
             build(if (matchable.mustFilter) matchable(nodes) else nodes)
 
-        def findAll(matchable: Matchable) = {
+        def @@(matchable: Matchable) = {
             def collectNodes(nodes: Seq[Node[T]], include: Boolean): List[Node[T]] =
                 (nodes :\ List[Node[T]]())((node, collected) => {
                     val current = collectNodes(node.children, true) ::: collected
@@ -49,7 +49,7 @@ package object css {
             filterIfNecessary(matchable, collectNodes(seq, false))
         }
 
-        def findChildren(matchable: Matchable) = {
+        def @@>(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, children) =>
                 if (matchable.mustFilter)
                     node.children ++: children
@@ -59,7 +59,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def findAdjacentSiblings(matchable: Matchable) = {
+        def @@+(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, siblings) => {
                 val all = node.siblings
                 val index = all.indexOf(node)
@@ -71,7 +71,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def findGeneralSiblings(matchable: Matchable) = {
+        def @@~(matchable: Matchable) = {
             val collected = (seq :\ List[Node[T]]())((node, siblings) => {
                 val all = node.siblings
                 val sibs = all.drop(all.indexOf(node) + 1)
@@ -96,7 +96,7 @@ package object css {
 
         def apply[T](n: T) = new Query[T](List(Node(n, None, NodeBrowserRegistry(n))))
 
-        def apply[T](p: Matchable, n: T): Query[T] = new Query[T](List(Node(n, None, NodeBrowserRegistry(n)))).findAll(p)
+        def apply[T](p: Matchable, n: T): Query[T] = new Query[T](List(Node(n, None, NodeBrowserRegistry(n)))).@@(p)
 
     }
 

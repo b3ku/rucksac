@@ -39,13 +39,21 @@ class QueryApiTest {
 
     @Test
     def testApi() {
-        val nodes = $("#myFoo > baz", document).filter("#first.fazHolder:eq(0)").findAll("faz")
+        val nodes = $("#myFoo > baz", document).filter("#first.fazHolder:eq(0)").@@("faz")
         assertEquals(nodes()(0), nodes(0)())
 
         val attr = nodes()(0) match {
             case e: Element => e.getAttribute("lang")
         }
         assertEquals("en-us", attr)
+    }
+
+    @Test
+    def testOperands() {
+        val nodes1 = $("#myFoo", document) @@> "bar" @@+ "baz" @@ "faz"
+        val nodes2 = $("#myFoo > bar + baz faz", document)
+        assertEquals(nodes1, nodes2)
+        assertEquals("faz", nodes1()(0).getNodeName)
     }
 
     @Test
@@ -75,7 +83,7 @@ class QueryApiTest {
                 }
         }
 
-        val nodes = new MyQuery(List(org.rucksac.Node(document, None, NodeBrowserRegistry(document)))).findAll("#myFoo > baz")
+        val nodes = new MyQuery(List(org.rucksac.Node(document, None, NodeBrowserRegistry(document)))).@@("#myFoo > baz")
         val extNodes = nodes.filter("baz").tail
         assert(extNodes.isInstanceOf[MyQuery])
     }

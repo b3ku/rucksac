@@ -81,10 +81,10 @@ class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, rig
     def apply[T](nodes: Seq[Node[T]]): Seq[Node[T]] = {
         val leftNodes = new Query(left(nodes))
         combinator.op match {
-            case ">" => leftNodes.findChildren(right)
-            case " " => leftNodes.findAll(right)
-            case "+" => leftNodes.findAdjacentSiblings(right)
-            case "~" => leftNodes.findGeneralSiblings(right)
+            case ">" => leftNodes.@@>(right)
+            case " " => leftNodes.@@(right)
+            case "+" => leftNodes.@@+(right)
+            case "~" => leftNodes.@@~(right)
             case s: String => NodeMatcherRegistry().selectorCombinators(s)(nodes)
         }
     }
