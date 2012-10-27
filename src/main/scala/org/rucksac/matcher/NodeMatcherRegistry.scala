@@ -5,17 +5,28 @@ import org.rucksac.ParseException
 
 /**
  * @author Andreas Kuhrwahl
+ * @author Oliver Becker
  * @since 30.08.12
  */
 class NodeMatcherRegistry {
 
-    val pseudoClasses = new
-            mutable.HashMap[String, PseudoClassMatcher]() with mutable.SynchronizedMap[String, PseudoClassMatcher] {
+    val simplePseudoClasses = new
+            mutable.HashMap[String, SimplePseudoClassMatcher]() with mutable.SynchronizedMap[String, SimplePseudoClassMatcher] {
         override def default(key: String) = throw new ParseException(":" + key + " not supported")
     }
 
-    val pseudoFunctions = new
-            mutable.HashMap[String, PseudoFunctionMatcher]() with mutable.SynchronizedMap[String, PseudoFunctionMatcher] {
+    val positionalPseudoClasses = new
+            mutable.HashMap[String, PositionalPseudoClassMatcher]() with mutable.SynchronizedMap[String, PositionalPseudoClassMatcher] {
+        override def default(key: String) = throw new ParseException(":" + key + " not supported")
+    }
+
+    val simplePseudoFunctions = new
+            mutable.HashMap[String, SimplePseudoFunctionMatcher]() with mutable.SynchronizedMap[String, SimplePseudoFunctionMatcher] {
+        override def default(key: String) = throw new ParseException(":" + key + "() not supported")
+    }
+
+    val positionalPseudoFunctions = new
+            mutable.HashMap[String, PositionalPseudoFunctionMatcher]() with mutable.SynchronizedMap[String, PositionalPseudoFunctionMatcher] {
         override def default(key: String) = throw new ParseException(":" + key + "() not supported")
     }
 

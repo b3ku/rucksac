@@ -8,6 +8,7 @@ import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
+ * @author Oliver Becker
  * @since 24.08.12
  */
 class jQueryMatchersTest {
@@ -17,8 +18,10 @@ class jQueryMatchersTest {
     val xml =
         <doc>
             <root class="oink">
-                <button class="button"/>
-                <input type="button" class="button"/>
+                <button class="button1"/>
+                <input type="button" class="input1"/>
+                <button type="submit" class="button2"/>
+                <input type="submit" class="input2"/>
             </root>
         </doc>
 
@@ -27,9 +30,18 @@ class jQueryMatchersTest {
     @Test
     def testButton() {
         val result = $(":button", xml)
+        assertEquals(3, result.size)
+        assertEquals("button1", (result(0)() \ "@class").text)
+        assertEquals("input1", (result(1)() \ "@class").text)
+        assertEquals("button2", (result(2)() \ "@class").text)
+    }
+
+    @Test
+    def testSubmit() {
+        val result = $(":submit", xml)
         assertEquals(2, result.size)
-        assertEquals("button", (result(0)() \ "@class").text)
-        assertEquals("button", (result(1)() \ "@class").text)
+        assertEquals("button2", (result(0)() \ "@class").text)
+        assertEquals("input2", (result(1)() \ "@class").text)
     }
 
     @Test
@@ -39,15 +51,19 @@ class jQueryMatchersTest {
         assertEquals("root", result(0)().label)
 
         result = $("[class!=oink]", xml)
-        assertEquals(2, result.size)
-        assertEquals("button", (result(0)() \ "@class").text)
-        assertEquals("button", (result(1)() \ "@class").text)
+        assertEquals(4, result.size)
+        assertEquals("button1", (result(0)() \ "@class").text)
+        assertEquals("input1", (result(1)() \ "@class").text)
+        assertEquals("button2", (result(2)() \ "@class").text)
+        assertEquals("input2", (result(3)() \ "@class").text)
 
         result = $("[class!='']", xml)
-        assertEquals(3, result.size)
+        assertEquals(5, result.size)
         assertEquals("root", result(0)().label)
-        assertEquals("button", (result(1)() \ "@class").text)
-        assertEquals("button", (result(2)() \ "@class").text)
+        assertEquals("button1", (result(1)() \ "@class").text)
+        assertEquals("input1", (result(2)() \ "@class").text)
+        assertEquals("button2", (result(3)() \ "@class").text)
+        assertEquals("input2", (result(4)() \ "@class").text)
     }
 
     @Test
@@ -79,13 +95,17 @@ class jQueryMatchersTest {
     @Test
     def testGt() {
         var result = $(":gt(0)", xml)
-        assertEquals(2, result.size)
+        assertEquals(4, result.size)
         assertEquals("button", result(0)().label)
         assertEquals("input", result(1)().label)
+        assertEquals("button", result(2)().label)
+        assertEquals("input", result(3)().label)
 
         result = $("* > :gt(0)", xml)
-        assertEquals(1, result.size)
+        assertEquals(3, result.size)
         assertEquals("input", result(0)().label)
+        assertEquals("button", result(1)().label)
+        assertEquals("input", result(2)().label)
     }
 
     @Test

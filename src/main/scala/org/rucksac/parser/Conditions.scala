@@ -5,6 +5,7 @@ import matcher.NodeMatcherRegistry
 
 /**
  * @author Andreas Kuhrwahl
+ * @author Oliver Becker
  * @since 15.08.12
  */
 
@@ -67,9 +68,9 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
 
 }
 
-final class PseudoClassCondition(pc: String) extends Condition with SeqMatchable {
+final class PseudoClassCondition(pc: String) extends Condition {
 
-    def apply[T](node: Node[T]) = pc match {
+    private def matches[T](node: Node[T], nodes: Seq[Node[T]] = List.empty) = pc match {
         case "first-child" => node.siblings.indexOf(node) == 0
         case "last-child" =>
             val children = node.siblings
@@ -83,10 +84,16 @@ final class PseudoClassCondition(pc: String) extends Condition with SeqMatchable
         case "enabled" => node.isElement && node.attribute("disabled") != "disabled"
         case "disabled" => node.isElement && node.attribute("disabled") == "disabled"
         case "checked" => node.isElement && node.attribute("checked") == "checked"
-        case s: String => NodeMatcherRegistry().pseudoClasses(s)(node)
+        case s: String =>
+            if (mustFilter) NodeMatcherRegistry().positionalPseudoClasses(s)(node, nodes)
+            else NodeMatcherRegistry().simplePseudoClasses(s)(node)
     }
 
-    val mustFilter = false
+    def apply[T](node: Node[T]) = matches(node)
+
+    def apply[T](nodes: Seq[Node[T]]) = nodes filter { matches(_, nodes) }
+
+    val mustFilter = NodeMatcherRegistry().positionalPseudoClasses.contains(pc)
 
     override def toString = ":" + pc
 
@@ -113,14 +120,16 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
                     lang == exp || lang.startsWith(exp + "-")
             }
             (node.isElement && matches(node)) || node.matchesAnyParent(matches)
-        case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, nodes, exp)
+        case s: String =>
+            if (mustFilter) NodeMatcherRegistry().positionalPseudoFunctions(s)(node, nodes, exp)
+            else NodeMatcherRegistry().simplePseudoFunctions(s)(node, exp)
     }
 
     def apply[T](node: Node[T]) = matches(node)
 
     def apply[T](nodes: Seq[Node[T]]) = nodes filter { matches(_, nodes) }
 
-    val mustFilter = NodeMatcherRegistry().pseudoFunctions.contains(name)
+    val mustFilter = NodeMatcherRegistry().positionalPseudoFunctions.contains(name)
 
     override def toString = ":" + name + "(" + exp + ")"
 

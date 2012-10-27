@@ -7,12 +7,12 @@ import org.junit.Assert._
 import org.rucksac.matcher.NodeMatcherRegistry
 
 /**
- * Tests for the filter approach (which is forced by using the :eq() resp. :gt() pseudo functions)
+ * Tests for the filter approach (which is forced by using positional pseudo classes resp. functions)
  *
  * @author Oliver Becker
  * @since 02.10.12
  */
-class MatchFilterTest {
+class PositionalMatchFilterTest {
 
     NodeMatcherRegistry.all()
 
@@ -36,70 +36,70 @@ class MatchFilterTest {
         new ByteArrayInputStream(documentAsText.getBytes("UTF-8")));
 
     @Test
-    def testEq1() {
+    def testDescendents1() {
         val result = $("ul.nav li:eq(1)", document)
         assertEquals(1, result.size)
         assertEquals("x12", result(0).attribute("id"))
     }
 
     @Test
-    def testEq2() {
+    def testDescendents2() {
         val result = $("ul.nav li:eq(5)", document)
         assertEquals(1, result.size)
         assertEquals("x23", result(0).attribute("id"))
     }
 
     @Test
-    def testEq3() {
+    def testDescendents3() {
         val result = $("ul.nav:eq(1) li:eq(2)", document)
         assertEquals(1, result.size)
         assertEquals("x23", result(0).attribute("id"))
     }
 
     @Test
-    def testEq4() {
+    def testDescendents4() {
         val result = $("ul.nav2 li:eq(2)", document)
         assertEquals(1, result.size)
         assertEquals("x23", result(0).attribute("id"))
     }
 
     @Test
-    def testEq5() {
+    def testChildren() {
         val result = $("body:eq(0) > ul.nav2 li:eq(2)", document)
         assertEquals(1, result.size)
         assertEquals("x23", result(0).attribute("id"))
     }
 
     @Test
-    def testEq6() {
+    def testAdjacentSiblings1() {
         val result = $("ul.nav li:eq(0) + li", document)
         assertEquals(1, result.size)
         assertEquals("x12", result(0).attribute("id"))
     }
 
     @Test
-    def testEq7() {
+    def testAdjacentSiblings2() {
         val result = $("ul.nav li + li:eq(0)", document)
         assertEquals(1, result.size)
         assertEquals("x12", result(0).attribute("id"))
     }
 
     @Test
-    def testEq8() {
+    def testAdjacentSiblings3() {
         val result = $("ul.nav li:eq(1) + li:eq(0)", document)
         assertEquals(1, result.size)
         assertEquals("x13", result(0).attribute("id"))
     }
 
     @Test
-    def testEq9() {
+    def testGeneralSiblings1() {
         val result = $("ul.nav li:eq(1) ~ li:eq(0)", document)
         assertEquals(1, result.size)
         assertEquals("x13", result(0).attribute("id"))
     }
 
     @Test
-    def testEq10() {
+    def testGeneralSiblings2() {
         val result = $("ul.nav li:gt(-1) ~ li:gt(-1)", document)
         assertEquals(4, result.size)
         assertEquals("x12", result(0).attribute("id"))
@@ -110,7 +110,7 @@ class MatchFilterTest {
 
     @Test
     @Ignore("FIXME")
-    def testEq11() {
+    def testFilterWithChildSelector() {
         var result = $("li", document).filter("ul.nav1 > li:eq(1)")
         assertEquals(1, result.size)
         assertEquals("x12", result(0).attribute("id"))
@@ -121,11 +121,43 @@ class MatchFilterTest {
     }
 
     @Test
-    def testEq12() {
+    def testFilterWithSelectorList() {
         var result = $("li", document).filter("#x21, #x13")
         assertEquals(2, result.size)
         assertEquals("x13", result(0).attribute("id"))
         assertEquals("x21", result(1).attribute("id"))
+    }
+
+    @Test
+    def testEven() {
+        var result = $("li:even", document)
+        assertEquals(3, result.size)
+        assertEquals("x11", result(0).attribute("id"))
+        assertEquals("x13", result(1).attribute("id"))
+        assertEquals("x22", result(2).attribute("id"))
+    }
+
+    @Test
+    def testOdd() {
+        var result = $("li:odd", document)
+        assertEquals(3, result.size)
+        assertEquals("x12", result(0).attribute("id"))
+        assertEquals("x21", result(1).attribute("id"))
+        assertEquals("x23", result(2).attribute("id"))
+    }
+
+    @Test
+    def testFirst() {
+        var result = $("li:first", document)
+        assertEquals(1, result.size)
+        assertEquals("x11", result(0).attribute("id"))
+    }
+
+    @Test
+    def testLast() {
+        var result = $("li:last", document)
+        assertEquals(1, result.size)
+        assertEquals("x23", result(0).attribute("id"))
     }
 
 }
