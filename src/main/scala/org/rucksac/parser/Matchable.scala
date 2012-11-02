@@ -14,4 +14,6 @@ trait Matchable {
 
     def mustFilter: Boolean
 
+    def usesCombinators: Boolean = false
+
 }

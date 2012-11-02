@@ -30,7 +30,13 @@ final class Selectors(selectors: List[Selector]) extends Selector {
         if (mustFilter) nodes intersect (List[Node[T]]() /: selectors)(_ ++ _(nodes))
         else nodes.filter(apply(_))
 
+    def filter[T](nodes: Seq[Node[T]]): Seq[Node[T]] =
+        if (mustFilter && usesCombinators) nodes intersect new Query(nodes.map(_.root).distinct).@@(this)
+        else apply(nodes)
+
     lazy val mustFilter = (false /: selectors)(_ || _.mustFilter)
+
+    override lazy val usesCombinators = (false /: selectors)(_ || _.usesCombinators)
 
     override def toString = selectors mkString ", "
 
@@ -90,6 +96,8 @@ class SelectorCombinatorSelector(left: Selector, combinator: CombinatorType, rig
     }
 
     lazy val mustFilter = left.mustFilter || right.mustFilter
+
+    override val usesCombinators = true
 
     override def toString = left.toString + combinator.toString + right
 

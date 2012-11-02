@@ -109,7 +109,13 @@ class PositionalMatchFilterTest {
     }
 
     @Test
-    @Ignore("FIXME")
+    def testFilter() {
+        var result = $("ul.nav2 li", document).filter("li:eq(1)")
+        assertEquals(1, result.size)
+        assertEquals("x22", result(0).attribute("id"))
+    }
+
+    @Test
     def testFilterWithChildSelector() {
         var result = $("li", document).filter("ul.nav1 > li:eq(1)")
         assertEquals(1, result.size)

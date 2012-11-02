@@ -86,7 +86,7 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def filter(expression: String) = build(asMatchable(expression).apply(seq))
+        def filter(expression: String) = build(asMatchable(expression).filter(seq))
 
     }
 
@@ -102,6 +102,6 @@ package object css {
 
     val $ = Query
 
-    implicit def asMatchable(expression: String): Matchable = new Parser().parse(expression)
+    implicit def asMatchable(expression: String) = new Parser().parse(expression)
 
 }

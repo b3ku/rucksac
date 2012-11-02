@@ -16,6 +16,11 @@ case class Node[T](node: T, p: Option[Node[T]], browser: NodeBrowser[T]) {
         case _ => None
     }
 
+    def root: Node[T] = parent match {
+        case Some(n) => n.root
+        case None => this
+    }
+
     def children: Seq[Node[T]] = {
         val children = browser.children(node)
         val parent = Option(this)
