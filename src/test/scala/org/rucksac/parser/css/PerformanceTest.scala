@@ -1,8 +1,9 @@
 package org.rucksac.parser.css
 
-import org.w3c.dom.{Attr, Document}
+import org.w3c.dom.{Node, Attr, Document}
 import org.junit.{Ignore, Test, Before}
 import javax.xml.parsers.DocumentBuilderFactory
+import $._
 
 /**
  * @author Andreas Kuhrwahl
@@ -55,8 +56,8 @@ class PerformanceTest {
     @Test
     def testMatch() {
         val start = System.currentTimeMillis()
-        $("root#doc > first.one.uno[name='bim'] *[name]", document)
-        println("Query took " + (System.currentTimeMillis() - start)/1000.0 + " seconds")
+        List[Node](document).findAll("root#doc > first.one.uno[name='bim'] *[name]")
+        println("Query took " + (System.currentTimeMillis() - start) / 1000.0 + " seconds")
     }
 
 }

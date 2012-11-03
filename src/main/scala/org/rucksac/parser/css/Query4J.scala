@@ -1,6 +1,9 @@
 package org.rucksac.parser.css
 
-import org.rucksac.Node
+import org.w3c.dom
+import org.rucksac.{ScalaXmlNode, DomNode}
+import $._
+import scala.collection.JavaConversions._
 
 /**
  * @author Andreas Kuhrwahl
@@ -8,8 +11,10 @@ import org.rucksac.Node
  */
 object Query4J {
 
-    import scala.collection.JavaConversions._
+    def queryDom(q: String, nodes: java.util.List[dom.Node]): java.lang.Iterable[dom.Node] = new
+            Query(nodes)({n: dom.Node => DomNode.asNode(n)}).findAll(q)
 
-    def $[T](q: String, node: T): java.lang.Iterable[T] = Query(q, node)()
+    def queryScalaNodes(q: String, nodes: java.util.List[xml.Node]): java.lang.Iterable[xml.Node] = new
+            Query(nodes)({n: xml.Node => ScalaXmlNode.asNode(n)}).findAll(q)
 
 }

@@ -8,37 +8,36 @@ import matcher.NodeMatcherRegistry
  * @since 15.08.12
  */
 
-trait Condition extends Matchable
+trait Condition extends (Node => Boolean)
 
 final class CombinatorCondition(first: Condition, second: Condition) extends Condition {
 
-    def apply[T](node: Node[T]) = first(node) && second(node)
+    def apply(node: Node) = first(node) && second(node)
 
-    def apply[T](nodes: List[Node[T]]) = second(first(nodes))
-
-    override def toString = first.toString + second.toString
+    override def toString() = first.toString + second.toString
 
 }
 
-final class NegativeCondition(con: Condition) extends Condition with ListMatchable {
+final class NegativeCondition(con: Condition) extends Condition {
 
-    def apply[T](node: Node[T]) = !con(node)
+    def apply(node: Node) = !con(node)
 
-    override def toString = ":not(" + con + ")"
-
-}
-
-final class SelectorCondition(sel: Selector) extends Condition with ListMatchable {
-
-    def apply[T](node: Node[T]) = sel(node)
-
-    override def toString = sel.toString
+    override def toString() = ":not(" + con + ")"
 
 }
 
-final class AttributeCondition(uri: String, name: String, value: String, op: String) extends Condition with ListMatchable {
+final class SelectorCondition(sel: Selector) extends Condition {
 
-    def apply[T](node: Node[T]) = node.isElement && {
+    def apply(node: Node) = sel(node)
+
+    override def toString() = sel.toString()
+
+}
+
+final class AttributeCondition(uri: String, name: String, value: String, op: String)
+    extends Condition {
+
+    def apply(node: Node) = node.isElement && {
         val attrValue = node.attribute(uri, name)
         op match {
             case "#" | "=" => attrValue == value
@@ -52,16 +51,16 @@ final class AttributeCondition(uri: String, name: String, value: String, op: Str
         }
     }
 
-    override def toString = op match {
+    override def toString() = op match {
         case "#" | "." => op + value
         case _ => "[" + QualifiedName(uri, name) + (if (value == null) "" else op + value) + "]"
     }
 
 }
 
-final class PseudoClassCondition(pc: String) extends Condition with ListMatchable {
+final class PseudoClassCondition(pc: String) extends Condition {
 
-    def apply[T](node: Node[T]) = pc match {
+    def apply(node: Node) = pc match {
         case "first-child" => node.siblings.indexOf(node) == 0
         case "last-child" =>
             val children = node.siblings
@@ -75,11 +74,10 @@ final class PseudoClassCondition(pc: String) extends Condition with ListMatchabl
         case "enabled" => node.isElement && node.attribute("disabled") != "disabled"
         case "disabled" => node.isElement && node.attribute("disabled") == "disabled"
         case "checked" => node.isElement && node.attribute("checked") == "checked"
-        //case s: String => NodeMatcherRegistry().pseudoClasses(s)(node, nodes)
-        case _ => throw new ParseException("not supported")
+        case s: String => NodeMatcherRegistry().pseudoClasses(s)(node)
     }
 
-    override def toString = ":" + pc
+    override def toString() = ":" + pc
 
 }
 
@@ -87,7 +85,7 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
 
     lazy val positionMatcher = NthParser.parse(exp)
 
-    private def matches[T](node: Node[T], nodes: List[Node[T]] = List.empty) = name match {
+    def apply(node: Node) = name match {
         case "nth-child" => positionMatcher.matches(node.siblings.indexOf(node) + 1)
         case "nth-last-child" =>
             val children = node.siblings
@@ -98,19 +96,15 @@ final class PseudoFunctionCondition(name: String, exp: String) extends Condition
             positionMatcher.matches(siblings.size - siblings.indexOf(node))
         case "contains" => node.textNodes.filter(_.contains(exp)).nonEmpty
         case "lang" =>
-            val matches: Node[T] => Boolean = {
-                p: Node[T] =>
+            val matches: Node => Boolean = {
+                p: Node =>
                     val lang: String = Option(p.attribute("lang")).getOrElse("")
                     lang == exp || lang.startsWith(exp + "-")
             }
             (node.isElement && matches(node)) || node.matchesAnyParent(matches)
-        case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, nodes, exp)
+        case s: String => NodeMatcherRegistry().pseudoFunctions(s)(node, exp)
     }
 
-    def apply[T](node: Node[T]) = matches(node)
-
-    def apply[T](nodes: List[Node[T]]) = nodes filter { matches(_, nodes) }
-
-    override def toString = ":" + name + "(" + exp + ")"
+    override def toString() = ":" + name + "(" + exp + ")"
 
 }

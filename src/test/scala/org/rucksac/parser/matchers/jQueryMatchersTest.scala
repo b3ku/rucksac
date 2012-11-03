@@ -2,9 +2,9 @@ package org.rucksac.parser.matchers
 
 import org.junit.Assert._
 import org.junit.{Ignore, Test}
-import org.rucksac.parser.css._
 import org.rucksac.ParseException
-import org.rucksac.matcher.NodeMatcherRegistry
+import scala.xml.Node
+import org.rucksac.parser.css.$._
 
 /**
  * @author Andreas Kuhrwahl
@@ -13,90 +13,86 @@ import org.rucksac.matcher.NodeMatcherRegistry
 @Ignore
 class jQueryMatchersTest {
 
-    NodeMatcherRegistry.all()
-
-    val xml =
+    val xml: Node =
         <root class="oink">
             <button class="button"/>
             <input type="button" class="button"/>
         </root>
 
-    //private def filter(query: String): Iterator[Query[Node]] = $(query, xml).iterator()
-
     @Test
     def testButton() {
-        val result = $(":button", xml)
+        val result = List(xml).findAll(":button")
         assertEquals(2, result.size)
-        assertEquals("button", (result(0)() \ "@class").text)
-        assertEquals("button", (result(1)() \ "@class").text)
+        assertEquals("button", (result(0) \ "@class").text)
+        assertEquals("button", (result(1) \ "@class").text)
     }
 
     @Test
     def testNe() {
-        var result = $("[class=oink]", xml)
+        var result = List(xml).findAll("[class=oink]")
         assertEquals(1, result.size)
-        assertEquals("root", result(0)().label)
+        assertEquals("root", result(0).label)
 
-        result = $("[class!=oink]", xml)
+        result = List(xml).findAll("[class!=oink]")
         assertEquals(2, result.size)
-        assertEquals("button", (result(0)() \ "@class").text)
-        assertEquals("button", (result(1)() \ "@class").text)
+        assertEquals("button", (result(0) \ "@class").text)
+        assertEquals("button", (result(1) \ "@class").text)
 
-        result = $("[class!='']", xml)
+        result = List(xml).findAll("[class!='']")
         assertEquals(3, result.size)
-        assertEquals("root", result(0)().label)
-        assertEquals("button", (result(1)() \ "@class").text)
-        assertEquals("button", (result(2)() \ "@class").text)
+        assertEquals("root", result(0).label)
+        assertEquals("button", (result(1) \ "@class").text)
+        assertEquals("button", (result(2) \ "@class").text)
     }
 
     @Test
     def testEq() {
-        var result = $(":eq(0)", xml)
+        var result = List(xml).findAll(":eq(0)")
         assertEquals(1, result.size)
-        assertEquals("root", result(0)().label)
+        assertEquals("root", result(0).label)
 
-        result = $(":eq(1)", xml)
+        result = List(xml).findAll(":eq(1)")
         assertEquals(1, result.size)
-        assertEquals("button", result(0)().label)
+        assertEquals("button", result(0).label)
 
-        result = $(":eq(2)", xml)
+        result = List(xml).findAll(":eq(2)")
         assertEquals(1, result.size)
-        assertEquals("input", result(0)().label)
+        assertEquals("input", result(0).label)
 
-        result = $(":eq(-1)", xml)
+        result = List(xml).findAll(":eq(-1)")
         assertEquals(0, result.size)
 
-        result = $(":eq(5)", xml)
+        result = List(xml).findAll(":eq(5)")
         assertEquals(0, result.size)
     }
 
     @Test(expected = classOf[ParseException])
     def testEqFail() {
-        $(":eq(foo)", xml)
+        List(xml).findAll(":eq(foo)")
     }
 
     @Test
     def testGt() {
-        var result = $(":gt(0)", xml)
+        var result = List(xml).findAll(":gt(0)")
         assertEquals(2, result.size)
-        assertEquals("button", result(0)().label)
-        assertEquals("input", result(1)().label)
+        assertEquals("button", result(0).label)
+        assertEquals("input", result(1).label)
 
-        result = $("* > :gt(0)", xml)
+        result = List(xml).findAll("* > :gt(0)")
         assertEquals(1, result.size)
-        assertEquals("input", result(0)().label)
+        assertEquals("input", result(0).label)
     }
 
     @Test
     def testLt() {
-        var result = $(":lt(2)", xml)
+        var result = List(xml).findAll(":lt(2)")
         assertEquals(2, result.size)
-        assertEquals("root", result(0)().label)
-        assertEquals("button", result(1)().label)
+        assertEquals("root", result(0).label)
+        assertEquals("button", result(1).label)
 
-        result = $("* > :lt(1)", xml)
+        result = List(xml).findAll("* > :lt(1)")
         assertEquals(1, result.size)
-        assertEquals("button", result(0)().label)
+        assertEquals("button", result(0).label)
     }
 
 }

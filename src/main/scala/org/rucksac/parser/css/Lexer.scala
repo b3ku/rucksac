@@ -26,12 +26,12 @@ trait CssTokens extends StdTokens {
 class Lexer extends Lexical with RegexParsers with CssTokens {
 
     override type Elem = Char
-    override val whiteSpace = """(\/\*[^*]*\*+([^/*][^*]*\*+)*\/)*""".r
+    override val whiteSpace = """(/\*[^*]*\*+([^/*][^*]*\*+)*/)*""".r
 
     private val keywords =
         Set[String](":not(", ",", ">", "+", "-", "#", ".", ":", "(", ")", "[", "]", "=", "~=", "^=", "$=", "*=", "|=",
             "|", "*", "~") ++ NodeMatcherRegistry().attributeOperations.keySet ++
-            NodeMatcherRegistry().selectorCombinators.keySet
+                NodeMatcherRegistry().selectorCombinators.keySet
 
     def whitespace = this.whiteSpace
 
@@ -50,19 +50,19 @@ class Lexer extends Lexical with RegexParsers with CssTokens {
     lazy val s      = """[ \t\r\n\f]+"""
 
     def token = (ident.r ^^ Identifier
-        | (num + ident).r ^^ Dimension
-        | num.r ^^ NumericLit
-        | string.r ^^ {s => StringLit(s.substring(1, s.length - 1))}
-        | s.r ^^ WhiteSpace
-        | EofCh ^^^ EOF
-        | '\'' ~> failure("unclosed string literal")
-        | '\"' ~> failure("unclosed string literal")
-        | keyword
-        | failure("illegal character"))
+            | (num + ident).r ^^ Dimension
+            | num.r ^^ NumericLit
+            | string.r ^^ { s => StringLit(s.substring(1, s.length - 1)) }
+            | s.r ^^ WhiteSpace
+            | EofCh ^^^ EOF
+            | '\'' ~> failure("unclosed string literal")
+            | '\"' ~> failure("unclosed string literal")
+            | keyword
+            | failure("illegal character"))
 
     private val keyword: Parser[Token] = {
 
-        def parseKeyword(s: String): Parser[Token] = accept(s.toList) ^^ {_ => Keyword(s)}
+        def parseKeyword(s: String): Parser[Token] = accept(s.toList) ^^ { _ => Keyword(s) }
 
         val k = new Array[String](keywords.size)
         keywords.copyToArray(k, 0)
