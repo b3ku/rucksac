@@ -86,7 +86,15 @@ package object css {
             filterIfNecessary(matchable, collected)
         }
 
-        def filter(expression: String) = build(asMatchable(expression).filter(seq))
+        def filter(expression: String) = {
+            val matchable = asMatchable(expression)
+            build(
+                if (matchable.mustFilter && matchable.usesCombinators)
+                    seq intersect build(seq.map(_.root).distinct).@@(matchable)
+                else
+                    matchable(seq)
+            )
+        }
 
     }
 
@@ -102,6 +110,6 @@ package object css {
 
     val $ = Query
 
-    implicit def asMatchable(expression: String) = new Parser().parse(expression)
+    implicit def asMatchable(expression: String): Matchable = new Parser().parse(expression)
 
 }
