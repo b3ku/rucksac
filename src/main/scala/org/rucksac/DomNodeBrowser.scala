@@ -6,7 +6,7 @@ import org.w3c.dom.{Document, Text, Element}
  * @author Andreas Kuhrwahl
  * @since 17.08.12
  */
-class DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
+object DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
 
     def children(node: org.w3c.dom.Node) = {
         val children = node.getChildNodes
@@ -38,11 +38,5 @@ class DomNodeBrowser extends NodeBrowser[org.w3c.dom.Node] {
         }
         case _ => throw new IllegalArgumentException(node.toString)
     }
-
-}
-
-object DomNodeBrowser {
-
-    val instance = new DomNodeBrowser
 
 }

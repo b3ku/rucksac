@@ -9,7 +9,7 @@ import scala.xml.Document
  * @author Oliver Becker
  * @since 26.08.12
  */
-class XmlNodeBrowser extends NodeBrowser[scala.xml.Node] {
+object XmlNodeBrowser extends NodeBrowser[scala.xml.Node] {
 
     def children(node: scala.xml.Node) = node.child
 
@@ -39,11 +39,5 @@ class XmlNodeBrowser extends NodeBrowser[scala.xml.Node] {
         }
         case _ => throw new IllegalArgumentException(node.toString())
     }
-
-}
-
-object XmlNodeBrowser {
-
-    val instance = new XmlNodeBrowser
 
 }

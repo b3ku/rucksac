@@ -1,7 +1,5 @@
 package org.rucksac.parser.css
 
-import org.rucksac.Node
-
 /**
  * @author Andreas Kuhrwahl
  * @since 01.09.12

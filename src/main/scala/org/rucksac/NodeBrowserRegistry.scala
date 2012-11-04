@@ -11,8 +11,8 @@ object NodeBrowserRegistry {
 
     private val map: mutable.Map[Class[_], NodeBrowser[_]] = new mutable.HashMap[Class[_], NodeBrowser[_]]()
 
-    map(classOf[org.w3c.dom.Node]) = DomNodeBrowser.instance
-    map(classOf[scala.xml.Node]) = XmlNodeBrowser.instance
+    map(classOf[org.w3c.dom.Node]) = DomNodeBrowser
+    map(classOf[scala.xml.Node]) = XmlNodeBrowser
 
 
     def register[T](clazz: Class[T], browser: NodeBrowser[T]) {
