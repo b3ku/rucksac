@@ -1,9 +1,11 @@
 apply plugin: 'scala'
+apply plugin: 'maven'
 apply plugin: 'idea'
 
 defaultTasks 'build'
 
-version = '1.0'
+version = '1.0.0-SNAPSHOT'
+group = 'org.rucksac'
 
 project.ext {
     scalaVersion = '2.9.2'
@@ -22,4 +24,8 @@ dependencies {
 
     testCompile "org.scalatest:scalatest_$scalaVersion:1.7.2"
     testCompile 'junit:junit:4.10'
+}
+
+jar {
+    baseName = 'rucksac'
 }
