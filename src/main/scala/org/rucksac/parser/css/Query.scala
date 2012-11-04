@@ -34,56 +34,49 @@ package object css {
                 def result() = new Query(current)
             }
 
-        private def build(seq: Seq[Node[T]]) = (newBuilder /: seq)(_ += _).result()
+        // TODO get rid of this method
+        private def build(seq: Seq[Node[T]]) = (newBuilder ++= seq).result()
 
-        private def filterIfNecessary(matchable: Matchable, nodes: Seq[Node[T]]) =
-            // TODO rewrite @@, @@>, @@+ and @@~ by using newBuilder instead of constructing List() in the first place
-            build(if (matchable.mustFilter) matchable(nodes) else nodes)
-
-        def @@(matchable: Matchable) = {
-            def collectNodes(nodes: Seq[Node[T]], include: Boolean): List[Node[T]] =
-                (nodes :\ List[Node[T]]())((node, collected) => {
-                    val current = collectNodes(node.children, true) ::: collected
-                    if (include && (matchable.mustFilter || matchable(node))) node :: current else current
+        def @@(matchable: Matchable): Query[T] = {
+            def collectNodes(nodes: Seq[Node[T]], include: Boolean): mutable.Builder[Node[T], Query[T]] =
+                (newBuilder /: nodes)((builder, node) => {
+                    if (include && (matchable.mustFilter || matchable(node))) builder += node
+                    builder ++= collectNodes(node.children, true).result()
                 })
-            filterIfNecessary(matchable, collectNodes(seq, false))
+            val descendants = collectNodes(seq, false).result()
+            if (matchable.mustFilter) build(matchable(descendants)) else descendants
         }
 
         def @@>(matchable: Matchable) = {
-            val collected = (seq :\ List[Node[T]]())((node, children) =>
+            val children = ((newBuilder /: seq)((builder, node) =>
                 if (matchable.mustFilter)
-                    node.children ++: children
+                    builder ++= node.children
                 else
-                    (node.children :\ children)((child, currentChildren) =>
-                        if (matchable(child)) child :: currentChildren else currentChildren))
-            filterIfNecessary(matchable, collected)
+                    (builder /: node.children)((b, child) => if (matchable(child)) b += child else b)
+            )).result()
+            if (matchable.mustFilter) build(matchable(children)) else children
         }
 
         def @@+(matchable: Matchable) = {
-            val collected = (seq :\ List[Node[T]]())((node, siblings) => {
+            val siblings = ((newBuilder /: seq)((builder, node) => {
                 val all = node.siblings
                 val index = all.indexOf(node)
                 if (index < all.size - 1) {
                     val sib = all(index + 1)
-                    if (matchable.mustFilter || matchable(sib)) sib :: siblings else siblings
-                } else siblings
-            })
-            filterIfNecessary(matchable, collected)
+                    if (matchable.mustFilter || matchable(sib)) builder += sib
+                }
+                builder
+            })).result()
+            if (matchable.mustFilter) build(matchable(siblings)) else siblings
         }
 
         def @@~(matchable: Matchable) = {
-            val collected = (seq :\ List[Node[T]]())((node, siblings) => {
+            val siblings = ((newBuilder /: seq)((builder, node) => {
                 val all = node.siblings
                 val sibs = all.drop(all.indexOf(node) + 1)
-                val newSibs = if (matchable.mustFilter)
-                    sibs
-                else
-                    (sibs :\ List[Node[T]]())((sib, currentSibs) =>
-                        if (matchable(sib)) sib :: currentSibs else currentSibs)
-                (newSibs :\ siblings)((sib, currentSibs) =>
-                    if (currentSibs.contains(sib)) currentSibs else sib :: currentSibs)
-            })
-            filterIfNecessary(matchable, collected)
+                builder ++= (if (matchable.mustFilter) sibs else sibs.filter(matchable(_)))
+            })).result().distinct
+            if (matchable.mustFilter) build(matchable(siblings)) else siblings
         }
 
         def filter(expression: String) = {
