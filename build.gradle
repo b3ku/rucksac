@@ -26,6 +26,11 @@ dependencies {
     testCompile 'junit:junit:4.10'
 }
 
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useAnt = false
+    scalaCompileOptions.fork = true
+}
+
 jar {
     baseName = 'rucksac'
 }
