@@ -26,13 +26,13 @@ dependencies {
     testCompile 'junit:junit:4.10'
 }
 
-tasks.withType(ScalaCompile) {
-    if ((gradle.gradleVersion <=> '1.3') >= 0) {
-        // set scalaCompileOptions for gradle 1.3 and above
-        scalaCompileOptions.useAnt = false
-        scalaCompileOptions.fork = true
-    }
-}
+//tasks.withType(ScalaCompile) {
+//    if ((gradle.gradleVersion <=> '1.3') >= 0) {
+//        // set scalaCompileOptions for gradle 1.3 and above
+//        scalaCompileOptions.useAnt = false
+//        scalaCompileOptions.fork = true
+//    }
+//}
 
 jar {
     baseName = 'rucksac'
